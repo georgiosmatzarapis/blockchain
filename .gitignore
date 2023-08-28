@@ -1,0 +1,8 @@
+# ide
+/.idea
+
+# build directories
+/cmake-build-*
+
+# dev space
+/lab
