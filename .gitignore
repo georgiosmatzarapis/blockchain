@@ -1,8 +1,6 @@
-# ide
-/.idea
+# editor
+.vscode
+.cache
 
 # build directories
-/cmake-build-*
-
-# dev space
-/lab
+/build
