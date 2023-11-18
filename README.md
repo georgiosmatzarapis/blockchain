@@ -12,7 +12,7 @@ Windows subsystem for Linux (WSL) with Ubuntu-22.04 distribution, has been chose
 
 On top of this,
 
-- Default C++ standard: C++23
+- Default C++ standard: C++23.
 - Compiler: GNU gcc/g++ packages both in 13.1.0 version.
 - Debugger: GNU gdb (GDB) package in 13.2 version.
 - cmake: version 3.27.7 - suite maintained and supported by Kitware.

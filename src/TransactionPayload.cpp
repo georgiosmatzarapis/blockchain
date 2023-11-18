@@ -8,6 +8,22 @@
 
 namespace transaction {
 
+Coinbase::Coinbase(std::string owner, const double& amount,
+                   const std::chrono::system_clock::time_point& timestamp)
+    : _owner{std::move(owner)},
+      _bitcoinAmount{amount},
+      _timestamp{timestamp} {}
+
+Coinbase::Coinbase(Coinbase&& coinbase) noexcept
+    : _owner{std::move(coinbase._owner)} {
+  coinbase._bitcoinAmount = 0;
+  coinbase._timestamp = std::chrono::system_clock::time_point::min();
+}
+
+Coinbase::Coinbase(const Coinbase& coinbase) = default;
+
+Coinbase::~Coinbase() = default;
+
 Payload::Payload(std::string sender, std::string receiver, const double& amount,
                  const std::chrono::system_clock::time_point& timestamp)
     : _sender(std::move(sender)),
@@ -29,7 +45,17 @@ Payload::Payload(transaction::Payload&& payload) noexcept
 
 Payload::Payload(const Payload& payload) = default;
 
+Payload::~Payload() = default;
+
 // Public API
+
+std::string Coinbase::getOwner() const { return _owner; }
+
+double Coinbase::getAmount() const { return _bitcoinAmount; }
+
+const std::chrono::system_clock::time_point& Coinbase::getTimestamp() const {
+  return _timestamp;
+}
 
 std::string Payload::getSender() const { return _sender; }
 
@@ -64,7 +90,7 @@ std::string Payload::bitcoinRepresentation() const {
 const std::string Payload::RemoveTrailingZeros(const std::string& iAmount) {
   auto sLastNonZero = iAmount.find_last_not_of('0');
 
-  if(sLastNonZero != std::string::npos && iAmount[sLastNonZero] == '.') {
+  if (sLastNonZero != std::string::npos && iAmount[sLastNonZero] == '.') {
     sLastNonZero = iAmount.find_last_not_of('0', sLastNonZero - 1);
   }
 
