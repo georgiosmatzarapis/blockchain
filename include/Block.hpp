@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <string>
@@ -27,7 +28,7 @@ class Block {
  private:
   std::uint32_t _index{};
   std::vector<std::uint8_t> _merkleRootHash{};
-  std::time_t _creationTime{};
+  std::chrono::system_clock::time_point _creationTime{};
   std::uint64_t _nonce{};
   std::string _previousHash{};
   std::string _hash{};

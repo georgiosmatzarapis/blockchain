@@ -1,6 +1,5 @@
 // author: georgiosmatzarapis
 
-#include <chrono>
 #include <iostream>
 #include <memory>
 
@@ -19,12 +18,12 @@ int main() {
   std::cout << "Amount: ";
   std::cin >> aAmount;
 
-  transaction::Payload aPayload(aSender, aReceiver, aAmount,
-                                std::chrono::system_clock::now());
+  transaction::Payload aPayload{aSender, aReceiver, aAmount};
 
-  auto aData = std::make_unique<std::vector<transaction::Payload>>(
-      std::initializer_list<transaction::Payload>{aPayload});
-  block::Block aBlock("hash", "previousHash", 1, std::move(aData), 2);
+  auto aData{std::make_unique<std::vector<transaction::Payload>>(
+      std::initializer_list<transaction::Payload>{aPayload})};
+  block::Block aBlock{"cd12daBlockHash0aa21", "previousHash", 1,
+                      std::move(aData), 2};
 
   aBlock.display();
 

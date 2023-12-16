@@ -7,96 +7,113 @@
 #include "../include/TransactionPayload.hpp"
 
 namespace transaction {
+/* === Helpers === */
 
-Coinbase::Coinbase(std::string owner, const double& amount,
-                   const std::chrono::system_clock::time_point& timestamp)
-    : _owner{std::move(owner)},
-      _bitcoinAmount{amount},
-      _timestamp{timestamp} {}
-
-Coinbase::Coinbase(Coinbase&& coinbase) noexcept
-    : _owner{std::move(coinbase._owner)} {
-  coinbase._bitcoinAmount = 0;
-  coinbase._timestamp = std::chrono::system_clock::time_point::min();
-}
-
-Coinbase::Coinbase(const Coinbase& coinbase) = default;
-
-Coinbase::~Coinbase() = default;
-
-Payload::Payload(std::string sender, std::string receiver, const double& amount,
-                 const std::chrono::system_clock::time_point& timestamp)
-    : _sender(std::move(sender)),
-      _receiver(std::move(receiver)),
-      _bitcoinAmount(amount),
-      _timestamp(timestamp) {
-  _satoshiAmount = bitcoinToSatoshi();
-  _bitcoinRepresentation = bitcoinRepresentation();
-}
-
-Payload::Payload(transaction::Payload&& payload) noexcept
-    : _sender(std::move(payload._sender)),
-      _receiver(std::move(payload._receiver)),
-      _bitcoinRepresentation(std::move(payload._bitcoinRepresentation)) {
-  payload._satoshiAmount = 0;
-  payload._bitcoinAmount = 0;
-  payload._timestamp = std::chrono::system_clock::time_point::min();
-}
-
-Payload::Payload(const Payload& payload) = default;
-
-Payload::~Payload() = default;
-
-// Public API
-
-std::string Coinbase::getOwner() const { return _owner; }
-
-double Coinbase::getAmount() const { return _bitcoinAmount; }
-
-const std::chrono::system_clock::time_point& Coinbase::getTimestamp() const {
-  return _timestamp;
-}
-
-std::string Payload::getSender() const { return _sender; }
-
-std::string Payload::getReceiver() const { return _receiver; }
-
-std::uint64_t Payload::getSatoshiAmount() const { return _satoshiAmount; }
-
-double Payload::getBitcoinAmount() const { return _bitcoinAmount; }
-
-const std::chrono::system_clock::time_point& Payload::getTimestamp() const {
-  return _timestamp;
-}
-
-std::string Payload::getBitcoinRepresentation() const {
-  return _bitcoinRepresentation;
-}
-
-// Private API
-
-std::uint64_t Payload::bitcoinToSatoshi() const {
-  return static_cast<std::uint64_t>(_bitcoinAmount * 1e8);
-}
-
-std::string Payload::bitcoinRepresentation() const {
-  std::ostringstream aStream;
-  aStream << std::fixed << std::setprecision(8) << _bitcoinAmount;
-  return RemoveTrailingZeros(aStream.str());
-}
-
-// Static methods
-
-const std::string Payload::RemoveTrailingZeros(const std::string& iAmount) {
-  auto sLastNonZero = iAmount.find_last_not_of('0');
+const std::string RemoveTrailingZeros(const std::string& iAmount) {
+  std::size_t sLastNonZero{iAmount.find_last_not_of('0')};
 
   if (sLastNonZero != std::string::npos && iAmount[sLastNonZero] == '.') {
     sLastNonZero = iAmount.find_last_not_of('0', sLastNonZero - 1);
   }
 
-  std::string sTrailedAmount{};
-  sTrailedAmount = iAmount.substr(0, sLastNonZero + 1);
+  std::string sTrailedAmount{iAmount.substr(0, sLastNonZero + 1)};
   return sTrailedAmount.empty() ? std::string("0") : sTrailedAmount;
 }
+
+std::uint64_t BitcoinToSatoshi(const double& iBitcoinAmount) {
+  return static_cast<std::uint64_t>(iBitcoinAmount * 1e8);
+}
+
+std::string BitcoinRepresentation(const double& iBitcoinAmount) {
+  std::ostringstream aStream{};
+  aStream << std::fixed << std::setprecision(8) << iBitcoinAmount;
+  return RemoveTrailingZeros(aStream.str());
+}
+
+/* === Coinbase Class === */
+
+Coinbase::Coinbase(std::string owner, const double& bitcoinAmount)
+    : _owner{std::move(owner)},
+      _bitcoinAmount{bitcoinAmount} {
+  _satoshiAmount = BitcoinToSatoshi(_bitcoinAmount);
+  _bitcoinRepresentation = BitcoinRepresentation(_bitcoinAmount);
+  _timestamp = std::chrono::system_clock::now();
+}
+
+Coinbase::Coinbase(Coinbase&& coinbase) noexcept
+    : _owner{std::move(coinbase._owner)},
+      _bitcoinRepresentation{std::move(coinbase._bitcoinRepresentation)},
+      _bitcoinAmount{coinbase._bitcoinAmount},
+      _satoshiAmount{coinbase._satoshiAmount},
+      _timestamp{coinbase._timestamp} {
+  coinbase._bitcoinAmount = 0;
+  coinbase._satoshiAmount = 0;
+  coinbase._timestamp = std::chrono::system_clock::time_point::min();
+}
+
+Coinbase::Coinbase(const Coinbase& coinbase) = default;
+
+Coinbase& Coinbase::operator=(const Coinbase& coinbase) = default;
+
+Coinbase& Coinbase::operator=(Coinbase&& coinbase) noexcept {
+  if (this != &coinbase) {
+    _owner = std::move(coinbase._owner);
+    _bitcoinRepresentation = std::move(coinbase._bitcoinRepresentation);
+    _bitcoinAmount = coinbase._bitcoinAmount;
+    _satoshiAmount = coinbase._satoshiAmount;
+    _timestamp = coinbase._timestamp;
+
+    coinbase._bitcoinAmount = 0;
+    coinbase._satoshiAmount = 0;
+    coinbase._timestamp = std::chrono::system_clock::time_point::min();
+  }
+  return *this;
+}
+
+Coinbase::~Coinbase() = default;
+
+// Public API
+
+std::string Coinbase::getOwner() const { return _owner; }
+
+double Coinbase::getBitcoinAmount() const { return _bitcoinAmount; }
+
+const std::chrono::system_clock::time_point Coinbase::getTimestamp() const {
+  return _timestamp;
+}
+
+std::uint64_t Coinbase::getSatoshiAmount() const { return _satoshiAmount; }
+
+std::string Coinbase::getBitcoinRepresentation() const {
+  return _bitcoinRepresentation;
+}
+
+/* === Payload Class === */
+
+Payload::Payload(std::string owner, std::string receiver, const double& amount)
+    : Coinbase(owner, amount),
+      _receiver(std::move(receiver)) {}
+
+Payload::Payload(Payload&& payload) noexcept
+    : Coinbase(payload),
+      _receiver(std::move(payload._receiver)) {}
+
+Payload::Payload(const Payload& payload) = default;
+
+Payload& Payload::operator=(const Payload& payload) = default;
+
+Payload& Payload::operator=(Payload&& payload) noexcept {
+  if (this != &payload) {
+    Coinbase::operator=(std::move(payload));
+    _receiver = std::move(payload._receiver);
+  }
+  return *this;
+}
+
+Payload::~Payload() = default;
+
+// Public API
+
+std::string Payload::getReceiver() const { return _receiver; }
 
 } // namespace transaction
