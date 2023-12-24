@@ -40,6 +40,10 @@ Coinbase::Coinbase(std::string owner, const double& bitcoinAmount)
   _timestamp = std::chrono::system_clock::now();
 }
 
+Coinbase::Coinbase(const Coinbase& coinbase) = default;
+
+Coinbase& Coinbase::operator=(const Coinbase& coinbase) = default;
+
 Coinbase::Coinbase(Coinbase&& coinbase) noexcept
     : _owner{std::move(coinbase._owner)},
       _bitcoinRepresentation{std::move(coinbase._bitcoinRepresentation)},
@@ -51,10 +55,6 @@ Coinbase::Coinbase(Coinbase&& coinbase) noexcept
   coinbase._timestamp = std::chrono::system_clock::time_point::min();
 }
 
-Coinbase::Coinbase(const Coinbase& coinbase) = default;
-
-Coinbase& Coinbase::operator=(const Coinbase& coinbase) = default;
-
 Coinbase& Coinbase::operator=(Coinbase&& coinbase) noexcept {
   if (this != &coinbase) {
     _owner = std::move(coinbase._owner);
@@ -62,7 +62,6 @@ Coinbase& Coinbase::operator=(Coinbase&& coinbase) noexcept {
     _bitcoinAmount = coinbase._bitcoinAmount;
     _satoshiAmount = coinbase._satoshiAmount;
     _timestamp = coinbase._timestamp;
-
     coinbase._bitcoinAmount = 0;
     coinbase._satoshiAmount = 0;
     coinbase._timestamp = std::chrono::system_clock::time_point::min();
@@ -91,16 +90,16 @@ std::string Coinbase::getBitcoinRepresentation() const {
 /* === Payload Class === */
 
 Payload::Payload(std::string owner, std::string receiver, const double& amount)
-    : Coinbase(owner, amount),
-      _receiver(std::move(receiver)) {}
-
-Payload::Payload(Payload&& payload) noexcept
-    : Coinbase(payload),
-      _receiver(std::move(payload._receiver)) {}
+    : Coinbase{owner, amount},
+      _receiver{std::move(receiver)} {}
 
 Payload::Payload(const Payload& payload) = default;
 
 Payload& Payload::operator=(const Payload& payload) = default;
+
+Payload::Payload(Payload&& payload) noexcept
+    : Coinbase{payload},
+      _receiver{std::move(payload._receiver)} {}
 
 Payload& Payload::operator=(Payload&& payload) noexcept {
   if (this != &payload) {

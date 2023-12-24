@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <string>
 #include <vector>
 
@@ -14,13 +12,13 @@ namespace block {
 class Block {
  public:
   Block(std::string hash, std::string previousHash, const std::uint32_t& index,
-        std::unique_ptr<std::vector<transaction::Payload>> data,
+        std::vector<std::unique_ptr<transaction::Payload>> data,
         const std::uint64_t& nonce);
 
   [[nodiscard]] std::string getHash() const;
   [[nodiscard]] std::string getPreviousHash() const;
   [[nodiscard]] std::uint32_t getIndex() const;
-  [[nodiscard]] const std::unique_ptr<std::vector<transaction::Payload>>&
+  [[nodiscard]] const std::vector<std::unique_ptr<transaction::Payload>>&
   getData() const;
 
   void display() const;
@@ -32,6 +30,6 @@ class Block {
   std::uint64_t _nonce{};
   std::string _previousHash{};
   std::string _hash{};
-  std::unique_ptr<std::vector<transaction::Payload>> _data{};
+  std::vector<std::unique_ptr<transaction::Payload>> _data{};
 };
 } // namespace block
