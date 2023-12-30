@@ -9,7 +9,7 @@
 namespace transaction {
 /* === Helpers === */
 
-const std::string RemoveTrailingZeros(const std::string& iAmount) {
+std::string RemoveTrailingZeros(const std::string& iAmount) {
   std::size_t sLastNonZero{iAmount.find_last_not_of('0')};
 
   if (sLastNonZero != std::string::npos && iAmount[sLastNonZero] == '.') {
@@ -77,7 +77,7 @@ std::string Coinbase::getOwner() const { return _owner; }
 
 double Coinbase::getBitcoinAmount() const { return _bitcoinAmount; }
 
-const std::chrono::system_clock::time_point Coinbase::getTimestamp() const {
+std::chrono::system_clock::time_point Coinbase::getTimestamp() const {
   return _timestamp;
 }
 
@@ -98,7 +98,7 @@ Payload::Payload(const Payload& payload) = default;
 Payload& Payload::operator=(const Payload& payload) = default;
 
 Payload::Payload(Payload&& payload) noexcept
-    : Coinbase{payload},
+    : Coinbase{std::move(payload)},
       _receiver{std::move(payload._receiver)} {}
 
 Payload& Payload::operator=(Payload&& payload) noexcept {

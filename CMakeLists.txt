@@ -1,22 +1,19 @@
-cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
-project(${PROJECT_NAME} blockchain)
+cmake_minimum_required(VERSION 3.27)
+project(${PROJECT_NAME} Blockchain LANGUAGES CXX
+ VERSION 0.1.0
+ DESCRIPTION "A blockchain implementation approach in C++"
+ HOMEPAGE_URL "https://github.com/georgiosmatzarapis/blockchain")
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(Headers
-  include/Block.hpp
-  include/TransactionPayload.hpp
-  include/User.hpp
-)
+option(BUILD_TESTS "Build tests with google tests" ON)
 
-set(Sources
-  main.cpp
-  src/Block.cpp
-  src/TransactionPayload.cpp
-  src/User.cpp
-)
+add_subdirectory(blockchain)
+add_subdirectory(app)
 
-add_executable(${PROJECT_NAME}
-  ${Headers} ${Sources})
-
-target_compile_options(${PROJECT_NAME} PRIVATE -std=c++23)
+if (BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()

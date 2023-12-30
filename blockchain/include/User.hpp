@@ -11,12 +11,20 @@
 namespace user {
 class Profile {
  public:
-  Profile(std::string fullName, const std::uint8_t& age, const double& deposit);
+  explicit Profile(std::string fullName, const std::uint8_t& age,
+                   const double& deposit);
 
   [[nodiscard]] std::string getFullName() const;
   [[nodiscard]] std::uint8_t getAge() const;
   [[nodiscard]] double getDeposit() const;
 
+  /**
+   * @brief Update the user deposit.
+   * The update will be performed if the final deposit is equal to or greater
+   * than zero.
+   * @param iAmount Amount to update the deposit with.
+   * @return Update status.
+   */
   bool updateDeposit(const double iAmount);
 
  private:
@@ -39,7 +47,7 @@ class InMemoryDatabase {
    * @param iProfile User profile.
    * @return Insertion status and optionally unique identifier of the record.
    */
-  const std::pair<bool, std::optional<std::uint16_t>> insert(Profile iProfile);
+  std::pair<bool, std::optional<std::uint16_t>> insert(Profile iProfile);
 
   /**
    * @brief Retrieve a profile from the database.
@@ -68,7 +76,7 @@ class InMemoryDatabase {
   InMemoryDatabase();
   ~InMemoryDatabase();
 
-  inline const std::uint16_t idGenerator() { return ++_profileId; }
+  inline std::uint16_t idGenerator() { return ++_profileId; }
 
   std::int16_t _profileId{-1};
   std::unordered_map<std::uint16_t, std::unique_ptr<Profile>> _profiles{};

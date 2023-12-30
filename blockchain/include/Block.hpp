@@ -11,9 +11,11 @@
 namespace block {
 class Block {
  public:
-  Block(std::string hash, std::string previousHash, const std::uint32_t& index,
-        std::vector<std::unique_ptr<transaction::Payload>> data,
-        const std::uint64_t& nonce);
+  Block() = default;
+  explicit Block(std::string hash, std::string previousHash,
+                 const std::uint32_t& index,
+                 std::vector<std::unique_ptr<transaction::Payload>> data,
+                 const std::uint64_t& nonce);
 
   [[nodiscard]] std::string getHash() const;
   [[nodiscard]] std::string getPreviousHash() const;

@@ -7,7 +7,7 @@
 #include <string>
 
 namespace transaction {
-static const std::string RemoveTrailingZeros(const std::string& iAmount);
+static std::string RemoveTrailingZeros(const std::string& iAmount);
 
 /**
  * @brief Convert the Bitcoin value to satoshi.
@@ -29,7 +29,7 @@ class Coinbase {
    * @brief Indicate first transaction in the network.
    * Can also be used for mining rewards.
    */
-  Coinbase(std::string owner, const double& bitcoinAmount);
+  explicit Coinbase(std::string owner, const double& bitcoinAmount);
   Coinbase(const Coinbase& coinbase);
   Coinbase& operator=(const Coinbase& coinbase);
   Coinbase(Coinbase&& coinbase) noexcept;
@@ -38,8 +38,7 @@ class Coinbase {
 
   [[nodiscard]] std::string getOwner() const;
   [[nodiscard]] double getBitcoinAmount() const;
-  [[nodiscard]] const std::chrono::system_clock::time_point
-  getTimestamp() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getTimestamp() const;
   [[nodiscard]] std::uint64_t getSatoshiAmount() const;
   [[nodiscard]] std::string getBitcoinRepresentation() const;
 
@@ -55,7 +54,8 @@ class Payload : public Coinbase {
  public:
   using Coinbase::Coinbase;
 
-  Payload(std::string owner, std::string receiver, const double& bitcoinAmount);
+  explicit Payload(std::string owner, std::string receiver,
+                   const double& bitcoinAmount);
   Payload(const Payload& payload);
   Payload& operator=(const Payload& payload);
   Payload(Payload&& payload) noexcept;

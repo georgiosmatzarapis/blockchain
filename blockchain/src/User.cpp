@@ -43,7 +43,7 @@ InMemoryDatabase& InMemoryDatabase::GetInstance() {
   return sInstance;
 }
 
-const std::pair<bool, std::optional<std::uint16_t>>
+std::pair<bool, std::optional<std::uint16_t>>
 InMemoryDatabase::insert(Profile iProfile) {
   std::uint16_t aProfileId{idGenerator()};
   const auto aRecordIterator{_profiles.emplace(
