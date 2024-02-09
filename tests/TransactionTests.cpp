@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../blockchain/include/TransactionPayload.hpp"
+#include "TransactionPayload.hpp"
 
 class CoinbaseTest : public ::testing::Test {
  protected:

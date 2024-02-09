@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "../blockchain/include/Block.hpp"
-#include "../blockchain/include/User.hpp"
+#include "Block.hpp"
+#include "User.hpp"
 
 int main() {
   std::string aOwner{};

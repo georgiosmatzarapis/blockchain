@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "../include/Block.hpp"
+#include "Block.hpp"
 
 namespace block {
 Block::Block(std::string hash, std::string previousHash,

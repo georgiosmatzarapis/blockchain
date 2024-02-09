@@ -1,6 +1,9 @@
 # editor
-.vscode
-.cache
+.vscode/
+.cache/
 
 # build directories
-/build
+/build/
+
+# app
+/logs/

@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_TESTS "Build tests with google tests" ON)
 
+add_subdirectory(utils)
 add_subdirectory(blockchain)
 add_subdirectory(app)
 

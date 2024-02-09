@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../blockchain/include/User.hpp"
+#include "User.hpp"
 
 class UserProfileTest : public ::testing::Test {
  protected:

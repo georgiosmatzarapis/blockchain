@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../blockchain/include/Block.hpp"
+#include "Block.hpp"
 
 class BlockTest : public ::testing::Test {
  protected:

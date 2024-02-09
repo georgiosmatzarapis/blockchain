@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "../include/TransactionPayload.hpp"
+#include "TransactionPayload.hpp"
 
 namespace transaction {
 /* === Helpers === */

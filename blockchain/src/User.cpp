@@ -1,6 +1,6 @@
 // author: georgiosmatzarapis
 
-#include "../include/User.hpp"
+#include "User.hpp"
 
 namespace user {
 /* === Profile Class === */
