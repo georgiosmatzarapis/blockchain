@@ -52,8 +52,6 @@ class Coinbase {
 
 class Payload : public Coinbase {
  public:
-  using Coinbase::Coinbase;
-
   explicit Payload(std::string owner, std::string receiver,
                    const double& bitcoinAmount);
   Payload(const Payload& payload);

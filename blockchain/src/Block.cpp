@@ -29,18 +29,26 @@ Block::getData() const {
 }
 
 void Block::display() const {
-  std::cout << "Retrieving data...\n";
+  std::cout << "\nBlock data:\n" << std::endl;
+  std::uint8_t aPayloadCounter{};
   if (_data.size()) {
-    std::for_each(_data.begin(), _data.end(),
-                  [](const std::unique_ptr<transaction::Payload>& iPayload) {
-                    std::cout << iPayload->getOwner() << std::endl;
-                    std::cout << iPayload->getReceiver() << std::endl;
-                    std::cout << iPayload->getSatoshiAmount() << std::endl;
-                    std::cout << iPayload->getBitcoinRepresentation()
-                              << std::endl;
-                    std::cout << iPayload->getTimestamp() << std::endl;
-                    std::cout << "---";
-                  });
+    std::for_each(
+        _data.begin(), _data.end(),
+        [&aPayloadCounter](
+            const std::unique_ptr<transaction::Payload>& iPayload) {
+          std::cout << "[Payload#" << static_cast<int>(aPayloadCounter) << "]"
+                    << std::endl;
+          std::cout << "Owner: " << iPayload->getOwner() << std::endl;
+          std::cout << "Receiver: " << iPayload->getReceiver() << std::endl;
+          std::cout << "Amount in Satoshi: " << iPayload->getSatoshiAmount()
+                    << std::endl;
+          std::cout << "Amount in Bitcoin: "
+                    << iPayload->getBitcoinRepresentation() << std::endl;
+          std::cout << "Payload creation: " << iPayload->getTimestamp()
+                    << std::endl;
+          ++aPayloadCounter;
+          std::cout << "====";
+        });
   } else {
     std::cout << "Data is empty." << std::endl;
   }

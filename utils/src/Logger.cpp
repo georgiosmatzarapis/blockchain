@@ -34,15 +34,18 @@ void Log::toFile(const LogLevel& iLogLevel, const std::string& iMessage,
                  const std::string& iFunctionName) const {
   const std::string aFileName{kLogsDirectory + GetCurrentDate() + ".log"};
 
-  std::ofstream aOutputFile{
-      aFileName, IsFilePresent(aFileName) ? std::ios::app : std::ios::out};
-
-  if (aOutputFile.is_open()) {
-    aOutputFile << constructStream(iLogLevel, iMessage, iFunctionName);
-    aOutputFile.close();
-  } else {
+  std::ofstream aOutputFile{};
+  aOutputFile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  try {
+    aOutputFile.open(aFileName,
+                     IsFilePresent(aFileName) ? std::ios::app : std::ios::out);
+    if (aOutputFile.is_open()) {
+      aOutputFile << constructStream(iLogLevel, iMessage, iFunctionName);
+    }
+  } catch (const std::ofstream::failure& iOutputException) {
     toConsole(LogLevel::ERROR,
-              std::string{"Unable to create log file: "} + aFileName,
+              "Exception while interacting with log file: " +
+                  std::string{iOutputException.what()},
               __PRETTY_FUNCTION__);
   }
 }

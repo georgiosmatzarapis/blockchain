@@ -1,8 +1,14 @@
 // author: georgiosmatzarapis
 
 #include "User.hpp"
+#include "Logger.hpp"
 
 namespace user {
+
+using namespace utils;
+
+static const Log& sLog{Log::GetInstance()};
+
 /* === Profile Class === */
 
 Profile::Profile(std::string fullName, const std::uint8_t& age,
@@ -24,8 +30,15 @@ bool Profile::updateDeposit(const double iAmount) {
   return [&]() -> bool {
     if (aUpdatedDeposit >= 0) {
       _deposit = aUpdatedDeposit;
+      sLog.toFile(LogLevel::INFO,
+                  "Deposit for user '" + _fullName + "' is updated.",
+                  __PRETTY_FUNCTION__);
       return true;
     }
+
+    sLog.toFile(LogLevel::WARNING,
+                "Invalid amount to update deposit of user '" + _fullName + "'.",
+                __PRETTY_FUNCTION__);
     return false;
   }();
 }
@@ -50,9 +63,17 @@ InMemoryDatabase::insert(Profile iProfile) {
       aProfileId, std::make_unique<Profile>(std::move(iProfile)))};
 
   if (aRecordIterator.second) {
+    sLog.toFile(LogLevel::INFO,
+                "[DB] Profile inserted with id: " + std::to_string(_profileId) +
+                    ".",
+                __PRETTY_FUNCTION__);
     return {true, std::make_optional<std::uint16_t>(aProfileId)};
   }
 
+  sLog.toFile(LogLevel::WARNING,
+              "[DB] Profile insertion failed with id: " +
+                  std::to_string(_profileId) + ".",
+              __PRETTY_FUNCTION__);
   return {false, std::nullopt};
 }
 
@@ -65,14 +86,27 @@ InMemoryDatabase::get(const std::uint16_t iProfileId) const {
     return {true, std::make_optional<Profile>(*(aProfilesIterator->second))};
   }
 
+  sLog.toFile(LogLevel::WARNING,
+              "[DB] Profile retrieval failed with id: " +
+                  std::to_string(_profileId) + ".",
+              __PRETTY_FUNCTION__);
   return {false, std::nullopt};
 }
 
 bool InMemoryDatabase::remove(const std::uint16_t iProfileId) {
   if (_profiles.count(iProfileId) == 1) {
     _profiles.erase(iProfileId);
+    sLog.toFile(LogLevel::INFO,
+                "[DB] Profile removed with id: " + std::to_string(_profileId) +
+                    ".",
+                __PRETTY_FUNCTION__);
     return true;
   }
+
+  sLog.toFile(LogLevel::WARNING,
+              "[DB] Profile removal failed with id: " +
+                  std::to_string(_profileId) + ".",
+              __PRETTY_FUNCTION__);
   return false;
 }
 
@@ -80,8 +114,17 @@ bool InMemoryDatabase::update(const std::uint16_t iProfileId,
                               Profile iProfile) {
   if (_profiles.count(iProfileId) == 1) {
     _profiles[iProfileId] = std::make_unique<Profile>(std::move(iProfile));
+    sLog.toFile(LogLevel::INFO,
+                "[DB] Profile updated with id: " + std::to_string(_profileId) +
+                    ".",
+                __PRETTY_FUNCTION__);
     return true;
   }
+
+  sLog.toFile(
+      LogLevel::WARNING,
+      "[DB] Profile update failed with id: " + std::to_string(_profileId) + ".",
+      __PRETTY_FUNCTION__);
   return false;
 }
 } // namespace user

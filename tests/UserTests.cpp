@@ -10,7 +10,7 @@ class UserProfileTest : public ::testing::Test {
       : _testData{{"fullName", std::string{"Username"}},
                   {"age", static_cast<std::uint8_t>(30)},
                   {"deposit", 1.2}},
-        _profile{std::get<std::string>(_testData["fullname"]),
+        _profile{std::get<std::string>(_testData["fullName"]),
                  std::get<std::uint8_t>(_testData["age"]),
                  std::get<double>(_testData["deposit"])} {};
 
@@ -33,7 +33,7 @@ class UserInMemoryDatabaseTest : public UserProfileTest {
 
 TEST_F(UserProfileTest, ShouldReturnFullName) {
   EXPECT_EQ(_profile.getFullName(),
-            std::get<std::string>(_testData["fullname"]));
+            std::get<std::string>(_testData["fullName"]));
 }
 
 TEST_F(UserProfileTest, ShouldReturnAge) {
@@ -143,7 +143,7 @@ TEST_F(UserInMemoryDatabaseTest, ShouldNotUpdateProfileWhenPassedIdIsInvalid) {
       user::InMemoryDatabase::GetInstance().get(_profileIdValue)};
   const user::Profile aRetrievedProfileValue{aRetrievedProfile.second.value()};
   EXPECT_EQ(aRetrievedProfileValue.getFullName(),
-            std::get<std::string>(_testData["fullname"]));
+            std::get<std::string>(_testData["fullName"]));
   EXPECT_EQ(aRetrievedProfileValue.getAge(),
             std::get<std::uint8_t>(_testData["age"]));
   EXPECT_EQ(aRetrievedProfileValue.getDeposit(),
