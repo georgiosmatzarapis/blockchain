@@ -6,22 +6,31 @@
 #include <string>
 #include <vector>
 
-#include "TransactionPayload.hpp"
+#include "Transaction.hpp"
 
 namespace block {
+
+using namespace transaction;
+
 class Block {
  public:
-  Block() = default;
-  explicit Block(std::string hash, std::string previousHash,
-                 const std::uint32_t& index,
-                 std::vector<std::unique_ptr<transaction::Payload>> data,
-                 const std::uint64_t& nonce);
+  Block();
+  explicit Block(std::string previousHash, const std::uint32_t& index,
+                 std::vector<std::unique_ptr<Payload>> payloads,
+                 std::optional<std::vector<std::unique_ptr<Coinbase>>>
+                     coinbases = std::nullopt);
+  explicit Block(std::string previousHash, const std::uint32_t& index,
+                 std::vector<std::unique_ptr<Coinbase>> coinbases,
+                 std::optional<std::vector<std::unique_ptr<Payload>>> payloads =
+                     std::nullopt);
 
   [[nodiscard]] std::string getHash() const;
   [[nodiscard]] std::string getPreviousHash() const;
   [[nodiscard]] std::uint32_t getIndex() const;
-  [[nodiscard]] const std::vector<std::unique_ptr<transaction::Payload>>&
-  getData() const;
+  [[nodiscard]] const std::optional<std::vector<std::unique_ptr<Payload>>>&
+  getPayloads() const;
+  [[nodiscard]] const std::optional<std::vector<std::unique_ptr<Coinbase>>>&
+  getCoinbases() const;
 
   void display() const;
 
@@ -32,6 +41,7 @@ class Block {
   std::uint64_t _nonce{};
   std::string _previousHash{};
   std::string _hash{};
-  std::vector<std::unique_ptr<transaction::Payload>> _data{};
+  std::optional<std::vector<std::unique_ptr<Payload>>> _payloads{};
+  std::optional<std::vector<std::unique_ptr<Coinbase>>> _coinbases{};
 };
 } // namespace block

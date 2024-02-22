@@ -18,12 +18,11 @@ int main() {
   std::cout << "Amount: ";
   std::cin >> aAmount;
 
-  std::vector<std::unique_ptr<transaction::Payload>> aData{};
-  aData.push_back(
+  std::vector<std::unique_ptr<transaction::Payload>> aPayloads{};
+  aPayloads.push_back(
       std::make_unique<transaction::Payload>(aOwner, aReceiver, aAmount));
 
-  block::Block aBlock{"cd12daBlockHash0aa21", "previousHash", 1,
-                      std::move(aData), 2};
+  block::Block aBlock{"previousHash", 1, std::move(aPayloads)};
 
   aBlock.display();
 

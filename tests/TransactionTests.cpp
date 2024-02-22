@@ -2,7 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "TransactionPayload.hpp"
+#include "Transaction.hpp"
+
+namespace transaction {
+namespace {
 
 class CoinbaseTest : public ::testing::Test {
  protected:
@@ -153,3 +156,5 @@ TEST(Payload, ShouldMoveAssignPayload) {
   EXPECT_EQ(aMovedPayload.getBitcoinAmount(), 1.2);
   EXPECT_EQ(aMovedPayload.getSatoshiAmount(), 120000000);
 }
+} // namespace
+} // namespace transaction

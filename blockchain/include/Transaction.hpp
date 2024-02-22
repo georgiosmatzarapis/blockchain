@@ -23,12 +23,12 @@ std::uint64_t BitcoinToSatoshi(const double& iBitcoinAmount);
  */
 std::string BitcoinRepresentation(const double& iBitcoinAmount);
 
+/**
+ * @brief Indicate first transaction in the network.
+ * Can also be used for mining rewards.
+ */
 class Coinbase {
  public:
-  /**
-   * @brief Indicate first transaction in the network.
-   * Can also be used for mining rewards.
-   */
   explicit Coinbase(std::string owner, const double& bitcoinAmount);
   Coinbase(const Coinbase& coinbase);
   Coinbase& operator=(const Coinbase& coinbase);

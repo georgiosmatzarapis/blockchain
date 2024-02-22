@@ -1,13 +1,13 @@
 set(Headers
- ${CMAKE_CURRENT_SOURCE_DIR}/include/Block.hpp
- ${CMAKE_CURRENT_SOURCE_DIR}/include/TransactionPayload.hpp
  ${CMAKE_CURRENT_SOURCE_DIR}/include/User.hpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/include/Transaction.hpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/include/Block.hpp
 )
 
 set(Sources
- ${CMAKE_CURRENT_SOURCE_DIR}/src/Block.cpp
- ${CMAKE_CURRENT_SOURCE_DIR}/src/TransactionPayload.cpp
  ${CMAKE_CURRENT_SOURCE_DIR}/src/User.cpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/src/Transaction.cpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/src/Block.cpp
 )
 
 add_library(${PROJECT_NAME}_core_lib ${Headers} ${Sources})

@@ -4,6 +4,9 @@
 
 #include "User.hpp"
 
+namespace user {
+namespace {
+
 class UserProfileTest : public ::testing::Test {
  protected:
   UserProfileTest()
@@ -149,3 +152,5 @@ TEST_F(UserInMemoryDatabaseTest, ShouldNotUpdateProfileWhenPassedIdIsInvalid) {
   EXPECT_EQ(aRetrievedProfileValue.getDeposit(),
             std::get<double>(_testData["deposit"]));
 }
+} // namespace
+} // namespace user
