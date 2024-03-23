@@ -23,6 +23,9 @@ std::uint64_t BitcoinToSatoshi(const double& iBitcoinAmount);
  */
 std::string BitcoinRepresentation(const double& iBitcoinAmount);
 
+std::pair<bool, std::optional<std::string>>
+ComputeHash(const std::string& iMessage);
+
 /**
  * @brief Indicate first transaction in the network.
  * Can also be used for mining rewards.
@@ -39,18 +42,26 @@ class Coinbase {
   [[nodiscard]] std::string getOwner() const;
   [[nodiscard]] double getBitcoinAmount() const;
   [[nodiscard]] std::chrono::system_clock::time_point getTimestamp() const;
+  [[nodiscard]] std::time_t getUnixTimestamp() const;
   [[nodiscard]] std::uint64_t getSatoshiAmount() const;
   [[nodiscard]] std::string getBitcoinRepresentation() const;
+  [[nodiscard]] virtual std::string getHash();
+
+ protected:
+  std::string _hash{};
 
  private:
   std::string _owner{};
   double _bitcoinAmount{};
   std::chrono::system_clock::time_point _timestamp{};
+  std::time_t _unixTimestamp{};
   std::uint64_t _satoshiAmount{};
   std::string _bitcoinRepresentation{};
+
+  void calculateUnixTimestamp();
 };
 
-class Payload : public Coinbase {
+class Payload final : public Coinbase {
  public:
   explicit Payload(std::string owner, std::string receiver,
                    const double& bitcoinAmount);
@@ -61,6 +72,7 @@ class Payload : public Coinbase {
   ~Payload() override;
 
   [[nodiscard]] std::string getReceiver() const;
+  [[nodiscard]] std::string getHash() override;
 
  private:
   std::string _receiver{};

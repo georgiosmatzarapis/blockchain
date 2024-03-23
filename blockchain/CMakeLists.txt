@@ -11,6 +11,7 @@ set(Sources
 )
 
 add_library(${PROJECT_NAME}_core_lib ${Headers} ${Sources})
-target_include_directories(${PROJECT_NAME}_core_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME}_core_lib PUBLIC
+ ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME}_core_lib PUBLIC ${PROJECT_NAME}_utils)
+target_link_libraries(${PROJECT_NAME}_core_lib PRIVATE ${PROJECT_NAME}_utils)

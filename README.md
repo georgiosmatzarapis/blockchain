@@ -18,7 +18,7 @@ On top of this,
 - cmake: version 3.27.7 - suite maintained and supported by Kitware.
 - ninja: version 1.11.1.
 
-Editor: I have chosen Visual Studio Code (version: 1.83.1) for the development of the current project, as it works pretty smoothly with WSL and provides the desired level of configurability.
+Editor: I have chosen Visual Studio Code (version: 1.87.2) for the development of the current project, as it works pretty smoothly with WSL and provides the desired level of configurability.
 
 Also, to highlight that CMake has been chosen for the build orchestration using the ninja build tool.
 
@@ -28,6 +28,7 @@ Special thanks to the creators and maintainers of the following projects and lib
 
 - [GNU/Linux](https://www.gnu.org/gnu/linux-and-gnu.en.html)
 - [Kitware](https://kitware.com/cmake)
+- [OpenSSL](https://www.openssl.org/)
 - [Bitcoin](https://github.com/bitcoin/bitcoin)
 
 ---

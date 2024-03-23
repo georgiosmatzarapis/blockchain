@@ -5,7 +5,7 @@
 #include "Block.hpp"
 
 namespace block {
-namespace {
+namespace tests {
 
 class BlockTest : public ::testing::Test {
  protected:
@@ -40,65 +40,65 @@ class BlockTest : public ::testing::Test {
 };
 
 TEST_F(BlockTest, ShouldReturnHash) {
-  EXPECT_EQ(_payloadBlock.getHash(), std::get<std::string>(_testData["hash"]));
+  ASSERT_EQ(_payloadBlock.getHash(), std::get<std::string>(_testData["hash"]));
 }
 
 TEST_F(BlockTest, ShouldReturnPreviousHash) {
-  EXPECT_EQ(_payloadBlock.getPreviousHash(),
+  ASSERT_EQ(_payloadBlock.getPreviousHash(),
             std::get<std::string>(_testData["previousHash"]));
 }
 
 TEST_F(BlockTest, ShouldReturnIndex) {
-  EXPECT_EQ(_payloadBlock.getIndex(),
+  ASSERT_EQ(_payloadBlock.getIndex(),
             std::get<std::uint32_t>(_testData["index"]));
 }
 
 TEST_F(BlockTest, ShouldReturnCoinbases) {
-  const std::vector<std::unique_ptr<Coinbase>>& aCoinbases{
+  const std::vector<std::unique_ptr<Coinbase>>& sCoinbases{
       _coinbaseBlock.getCoinbases().value()};
-  EXPECT_EQ(aCoinbases[0]->getOwner(),
+  ASSERT_EQ(sCoinbases[0]->getOwner(),
             std::get<Coinbase>(_testData["coinbase"]).getOwner());
-  EXPECT_EQ(aCoinbases[0]->getBitcoinAmount(),
+  ASSERT_EQ(sCoinbases[0]->getBitcoinAmount(),
             std::get<Coinbase>(_testData["coinbase"]).getBitcoinAmount());
-  EXPECT_EQ(
-      aCoinbases[0]->getBitcoinRepresentation(),
+  ASSERT_EQ(
+      sCoinbases[0]->getBitcoinRepresentation(),
       std::get<Coinbase>(_testData["coinbase"]).getBitcoinRepresentation());
-  EXPECT_EQ(aCoinbases[0]->getSatoshiAmount(),
+  ASSERT_EQ(sCoinbases[0]->getSatoshiAmount(),
             std::get<Coinbase>(_testData["coinbase"]).getSatoshiAmount());
-  EXPECT_EQ(
-      aCoinbases[0]->getTimestamp(),
+  ASSERT_EQ(
+      sCoinbases[0]->getTimestamp(),
       std::get<transaction::Coinbase>(_testData["coinbase"]).getTimestamp());
 }
 
 TEST_F(BlockTest, ShouldReturnPayloads) {
-  const std::vector<std::unique_ptr<Payload>>& aPayloads{
+  const std::vector<std::unique_ptr<Payload>>& sPayloads{
       _payloadBlock.getPayloads().value()};
-  EXPECT_EQ(aPayloads[0]->getOwner(),
+  ASSERT_EQ(sPayloads[0]->getOwner(),
             std::get<Payload>(_testData["payload"]).getOwner());
-  EXPECT_EQ(aPayloads[0]->getReceiver(),
+  ASSERT_EQ(sPayloads[0]->getReceiver(),
             std::get<Payload>(_testData["payload"]).getReceiver());
-  EXPECT_EQ(aPayloads[0]->getBitcoinAmount(),
+  ASSERT_EQ(sPayloads[0]->getBitcoinAmount(),
             std::get<Payload>(_testData["payload"]).getBitcoinAmount());
-  EXPECT_EQ(aPayloads[0]->getBitcoinRepresentation(),
+  ASSERT_EQ(sPayloads[0]->getBitcoinRepresentation(),
             std::get<Payload>(_testData["payload"]).getBitcoinRepresentation());
-  EXPECT_EQ(aPayloads[0]->getSatoshiAmount(),
+  ASSERT_EQ(sPayloads[0]->getSatoshiAmount(),
             std::get<Payload>(_testData["payload"]).getSatoshiAmount());
-  EXPECT_EQ(
-      aPayloads[0]->getTimestamp(),
+  ASSERT_EQ(
+      sPayloads[0]->getTimestamp(),
       std::get<transaction::Payload>(_testData["payload"]).getTimestamp());
 }
 
 TEST_F(BlockTest, ShouldReturnNullPayloadsWhenBlockContainsOnlyCoinbases) {
-  EXPECT_FALSE(_coinbaseBlock.getPayloads().has_value());
+  ASSERT_FALSE(_coinbaseBlock.getPayloads().has_value());
 }
 
 TEST_F(BlockTest, ShouldReturnNullCoinbasesWhenBlockContainsOnlyPayloads) {
-  EXPECT_FALSE(_payloadBlock.getCoinbases().has_value());
+  ASSERT_FALSE(_payloadBlock.getCoinbases().has_value());
 }
 
 TEST_F(BlockTest, ShouldReturnNotNullCoinbasesAndPayloadsWhenBlockHasAllData) {
-  EXPECT_TRUE(_fullBlock.getCoinbases().has_value());
-  EXPECT_TRUE(_fullBlock.getPayloads().has_value());
+  ASSERT_TRUE(_fullBlock.getCoinbases().has_value());
+  ASSERT_TRUE(_fullBlock.getPayloads().has_value());
 }
-} // namespace
+} // namespace tests
 } // namespace block

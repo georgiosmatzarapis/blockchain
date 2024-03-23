@@ -15,6 +15,6 @@ add_subdirectory(blockchain)
 add_subdirectory(app)
 
 if (BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
+ enable_testing()
+ add_subdirectory(tests)
 endif()

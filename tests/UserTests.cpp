@@ -5,7 +5,7 @@
 #include "User.hpp"
 
 namespace user {
-namespace {
+namespace tests {
 
 class UserProfileTest : public ::testing::Test {
  protected:
@@ -35,37 +35,37 @@ class UserInMemoryDatabaseTest : public UserProfileTest {
 /* === Profile Tests === */
 
 TEST_F(UserProfileTest, ShouldReturnFullName) {
-  EXPECT_EQ(_profile.getFullName(),
+  ASSERT_EQ(_profile.getFullName(),
             std::get<std::string>(_testData["fullName"]));
 }
 
 TEST_F(UserProfileTest, ShouldReturnAge) {
-  EXPECT_EQ(_profile.getAge(), std::get<std::uint8_t>(_testData["age"]));
+  ASSERT_EQ(_profile.getAge(), std::get<std::uint8_t>(_testData["age"]));
 }
 
 TEST_F(UserProfileTest, ShouldReturnDeposit) {
-  EXPECT_EQ(_profile.getDeposit(), std::get<double>(_testData["deposit"]));
+  ASSERT_EQ(_profile.getDeposit(), std::get<double>(_testData["deposit"]));
 }
 
 TEST_F(UserProfileTest, ShouldUpdateDepositWhenNewDepositIsPositive) {
-  constexpr double aAmount{1.3};
-  bool aIsDepositUpdated{_profile.updateDeposit(aAmount)};
-  ASSERT_TRUE(aIsDepositUpdated);
+  constexpr double sAmount{1.3};
+  bool sIsDepositUpdated{_profile.updateDeposit(sAmount)};
+  ASSERT_TRUE(sIsDepositUpdated);
   EXPECT_EQ(_profile.getDeposit(),
-            (aAmount + std::get<double>(_testData["deposit"])));
+            (sAmount + std::get<double>(_testData["deposit"])));
 }
 
 TEST_F(UserProfileTest, ShouldUpdateDepositWhenNewDepositIsZero) {
-  constexpr double aAmount{-1.2};
-  bool aIsDepositUpdated{_profile.updateDeposit(aAmount)};
-  ASSERT_TRUE(aIsDepositUpdated);
+  constexpr double sAmount{-1.2};
+  bool sIsDepositUpdated{_profile.updateDeposit(sAmount)};
+  ASSERT_TRUE(sIsDepositUpdated);
   EXPECT_EQ(_profile.getDeposit(), 0);
 }
 
 TEST_F(UserProfileTest, ShouldNotUpdateDepositWhenNewDepositIsNegative) {
-  constexpr double aAmount{-1.3};
-  bool aIsDepositUpdated{_profile.updateDeposit(aAmount)};
-  ASSERT_FALSE(aIsDepositUpdated);
+  constexpr double sAmount{-1.3};
+  bool sIsDepositUpdated{_profile.updateDeposit(sAmount)};
+  ASSERT_FALSE(sIsDepositUpdated);
   EXPECT_EQ(_profile.getDeposit(), std::get<double>(_testData["deposit"]));
 }
 
@@ -78,79 +78,79 @@ TEST_F(UserInMemoryDatabaseTest, ShouldInsertProfileWhenRecordDoesNotExist) {
 
 TEST_F(UserInMemoryDatabaseTest,
        ShouldIncreaseUniqueIdWhenNewProfileIsInserted) {
-  std::pair<bool, std::optional<std::uint16_t>> aProfileId{
+  std::pair<bool, std::optional<std::uint16_t>> sProfileId{
       user::InMemoryDatabase::GetInstance().insert(_profile)};
   EXPECT_TRUE(_profileId.first);
   EXPECT_EQ(_profileId.second, 0);
-  ASSERT_TRUE(aProfileId.first);
-  ASSERT_EQ(aProfileId.second, 1);
+  ASSERT_TRUE(sProfileId.first);
+  ASSERT_EQ(sProfileId.second, 1);
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldGetProfileWhenPassedIdIsValid) {
-  std::pair<bool, std::optional<user::Profile>> aRetrievedProfile{
+  std::pair<bool, std::optional<user::Profile>> sRetrievedProfile{
       user::InMemoryDatabase::GetInstance().get(_profileIdValue)};
-  const user::Profile aRetrievedProfileValue{aRetrievedProfile.second.value()};
-  ASSERT_TRUE(aRetrievedProfile.first);
-  EXPECT_EQ(aRetrievedProfileValue.getFullName(), _profile.getFullName());
-  EXPECT_EQ(aRetrievedProfileValue.getAge(), _profile.getAge());
-  EXPECT_EQ(aRetrievedProfileValue.getDeposit(), _profile.getDeposit());
+  const user::Profile sRetrievedProfileValue{sRetrievedProfile.second.value()};
+  ASSERT_TRUE(sRetrievedProfile.first);
+  EXPECT_EQ(sRetrievedProfileValue.getFullName(), _profile.getFullName());
+  EXPECT_EQ(sRetrievedProfileValue.getAge(), _profile.getAge());
+  EXPECT_EQ(sRetrievedProfileValue.getDeposit(), _profile.getDeposit());
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldNotGetProfileWhenPassedIdIsInvalid) {
-  std::pair<bool, std::optional<user::Profile>> aRetrievedProfile{
+  std::pair<bool, std::optional<user::Profile>> sRetrievedProfile{
       user::InMemoryDatabase::GetInstance().get(1)};
-  ASSERT_FALSE(aRetrievedProfile.first);
+  ASSERT_FALSE(sRetrievedProfile.first);
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldRemoveProfileWhenPassedIdIsValid) {
-  bool aIsProfileRemoved{
+  bool sIsProfileRemoved{
       user::InMemoryDatabase::GetInstance().remove(_profileIdValue)};
-  ASSERT_TRUE(aIsProfileRemoved);
+  ASSERT_TRUE(sIsProfileRemoved);
   ASSERT_FALSE(
       user::InMemoryDatabase::GetInstance().get(_profileIdValue).first);
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldNotRemoveProfileWhenPassedIdIsInvalid) {
-  bool aIsProfileRemoved{user::InMemoryDatabase::GetInstance().remove(1)};
-  ASSERT_FALSE(aIsProfileRemoved);
+  bool sIsProfileRemoved{user::InMemoryDatabase::GetInstance().remove(1)};
+  ASSERT_FALSE(sIsProfileRemoved);
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldUpdateProfileWhenPassedIdIsValid) {
-  constexpr double aAmount{1.2};
-  _profile.updateDeposit(aAmount);
-  bool aIsProfileUpdated{
+  constexpr double sAmount{1.2};
+  _profile.updateDeposit(sAmount);
+  bool sIsProfileUpdated{
       user::InMemoryDatabase::GetInstance().update(_profileIdValue, _profile)};
-  ASSERT_TRUE(aIsProfileUpdated);
-  std::pair<bool, std::optional<user::Profile>> aRetrievedProfile{
+  ASSERT_TRUE(sIsProfileUpdated);
+  std::pair<bool, std::optional<user::Profile>> sRetrievedProfile{
       user::InMemoryDatabase::GetInstance().get(_profileIdValue)};
-  EXPECT_EQ(aRetrievedProfile.second.value().getDeposit(),
-            (std::get<double>(_testData["deposit"]) + aAmount));
+  EXPECT_EQ(sRetrievedProfile.second.value().getDeposit(),
+            (std::get<double>(_testData["deposit"]) + sAmount));
 
   // Update with a completely new instance
   user::InMemoryDatabase::GetInstance().update(
       _profileIdValue, user::Profile{"NewUser", 25, 1.5});
-  std::pair<bool, std::optional<user::Profile>> aNewlyRetrievedProfile{
+  std::pair<bool, std::optional<user::Profile>> sNewlyRetrievedProfile{
       user::InMemoryDatabase::GetInstance().get(_profileIdValue)};
-  const user::Profile aNewlyRetrievedProfileValue{
-      aNewlyRetrievedProfile.second.value()};
-  EXPECT_EQ(aNewlyRetrievedProfileValue.getFullName(), "NewUser");
-  EXPECT_EQ(aNewlyRetrievedProfileValue.getAge(), 25);
-  EXPECT_EQ(aNewlyRetrievedProfileValue.getDeposit(), 1.5);
+  const user::Profile sNewlyRetrievedProfileValue{
+      sNewlyRetrievedProfile.second.value()};
+  ASSERT_EQ(sNewlyRetrievedProfileValue.getFullName(), "NewUser");
+  ASSERT_EQ(sNewlyRetrievedProfileValue.getAge(), 25);
+  ASSERT_EQ(sNewlyRetrievedProfileValue.getDeposit(), 1.5);
 }
 
 TEST_F(UserInMemoryDatabaseTest, ShouldNotUpdateProfileWhenPassedIdIsInvalid) {
-  bool aIsProfileUpdated{user::InMemoryDatabase::GetInstance().update(
+  bool sIsProfileUpdated{user::InMemoryDatabase::GetInstance().update(
       1, user::Profile{"NewUser", 25, 1.5})};
-  ASSERT_FALSE(aIsProfileUpdated);
-  std::pair<bool, std::optional<user::Profile>> aRetrievedProfile{
+  ASSERT_FALSE(sIsProfileUpdated);
+  std::pair<bool, std::optional<user::Profile>> sRetrievedProfile{
       user::InMemoryDatabase::GetInstance().get(_profileIdValue)};
-  const user::Profile aRetrievedProfileValue{aRetrievedProfile.second.value()};
-  EXPECT_EQ(aRetrievedProfileValue.getFullName(),
+  const user::Profile sRetrievedProfileValue{sRetrievedProfile.second.value()};
+  ASSERT_EQ(sRetrievedProfileValue.getFullName(),
             std::get<std::string>(_testData["fullName"]));
-  EXPECT_EQ(aRetrievedProfileValue.getAge(),
+  ASSERT_EQ(sRetrievedProfileValue.getAge(),
             std::get<std::uint8_t>(_testData["age"]));
-  EXPECT_EQ(aRetrievedProfileValue.getDeposit(),
+  ASSERT_EQ(sRetrievedProfileValue.getDeposit(),
             std::get<double>(_testData["deposit"]));
 }
-} // namespace
+} // namespace tests
 } // namespace user

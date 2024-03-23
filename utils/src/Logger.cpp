@@ -8,7 +8,7 @@
 
 namespace utils {
 
-static constexpr char kLogsDirectory[]{"../../logs/"};
+static constexpr std::string kLogsDirectory{"../../logs/"};
 
 Log::Log() = default;
 
