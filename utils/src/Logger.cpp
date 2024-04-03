@@ -1,6 +1,7 @@
 // author: georgiosmatzarapis
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <thread>
 
@@ -37,15 +38,27 @@ void Log::toFile(const LogLevel& iLogLevel, const std::string& iMessage,
   std::ofstream aOutputFile{};
   aOutputFile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   try {
+    std::filesystem::create_directories(kLogsDirectory);
+
     aOutputFile.open(aFileName,
                      IsFilePresent(aFileName) ? std::ios::app : std::ios::out);
     if (aOutputFile.is_open()) {
       aOutputFile << constructStream(iLogLevel, iMessage, iFunctionName);
     }
+  } catch (const std::filesystem::filesystem_error& iFileSystemError) {
+    toConsole(LogLevel::ERROR,
+              "Exception while creating the log directory: " +
+                  std::string{iFileSystemError.what()},
+              __PRETTY_FUNCTION__);
   } catch (const std::ofstream::failure& iOutputException) {
     toConsole(LogLevel::ERROR,
               "Exception while interacting with log file: " +
                   std::string{iOutputException.what()},
+              __PRETTY_FUNCTION__);
+  } catch (const std::exception& iException) {
+    toConsole(LogLevel::ERROR,
+              "Unhandled exception while interacting with log file: " +
+                  std::string{iException.what()},
               __PRETTY_FUNCTION__);
   }
 }

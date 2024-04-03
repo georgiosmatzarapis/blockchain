@@ -2,12 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include "Common.hpp"
 #include "Transaction.hpp"
 
 namespace transaction {
 namespace tests {
 
-namespace utils {
+namespace lib {
 template <typename Transaction>
 static void ASSERT_MOVE_OPERATIONS(
     const Transaction& iSourceTransaction, Transaction& ioMovedTransaction,
@@ -37,7 +38,7 @@ static void ASSERT_MOVE_OPERATIONS(
     ASSERT_EQ(ioMovedTransaction.getReceiver(), "Receiver");
   }
 }
-} // namespace utils
+} // namespace lib
 
 struct Data {
   static constexpr std::string kOwner{"Owner"};
@@ -63,31 +64,30 @@ class PayloadTest : public ::testing::Test {
   transaction::Payload _payload;
 };
 
-/* === Helpers Tests === */
+/* === utils::core_lib Tests === */
 
-TEST(TransactionComputeHashTest, ShouldReturnTrueAndHashWhenMessageIsNoEmpty) {
+TEST(ComputeHashTest, ShouldReturnTrueAndHashWhenMessageIsNoEmpty) {
   std::pair<bool, std::optional<std::string>> sHash{
-      ComputeHash(std::string{"dummyText"})};
+      utils::core_lib::ComputeHash(std::string{"dummyText"})};
   ASSERT_TRUE(sHash.first);
   ASSERT_TRUE(sHash.second.has_value());
 }
 
-TEST(TransactionComputeHashTest, ShouldReturnFalseAndNoHashWhenMessageIsEmpty) {
+TEST(ComputeHashTest, ShouldReturnFalseAndNoHashWhenMessageIsEmpty) {
   std::pair<bool, std::optional<std::string>> sHash{
-      ComputeHash(std::string{""})};
+      utils::core_lib::ComputeHash(std::string{""})};
   ASSERT_FALSE(sHash.first);
   ASSERT_FALSE(sHash.second.has_value());
 }
 
-TEST(TransactionComputeHashTest, ShouldReturnSameHashWhenMessageIsTheSame) {
-  ASSERT_EQ(ComputeHash(std::string{"dummyText"}),
-            ComputeHash(std::string{"dummyText"}));
+TEST(ComputeHashTest, ShouldReturnSameHashWhenMessageIsTheSame) {
+  ASSERT_EQ(utils::core_lib::ComputeHash(std::string{"dummyText"}),
+            utils::core_lib::ComputeHash(std::string{"dummyText"}));
 }
 
-TEST(TransactionComputeHashTest,
-     ShouldReturnDifferentHashWhenMessageIsNotTheSame) {
-  ASSERT_NE(ComputeHash(std::string{"dummyText1"}),
-            ComputeHash(std::string{"dummyText2"}));
+TEST(ComputeHashTest, ShouldReturnDifferentHashWhenMessageIsNotTheSame) {
+  ASSERT_NE(utils::core_lib::ComputeHash(std::string{"dummyText1"}),
+            utils::core_lib::ComputeHash(std::string{"dummyText2"}));
 }
 
 /* === Coinbase Tests === */
@@ -132,9 +132,9 @@ TEST_F(CoinbaseTest, ShouldReturnTheStoredHashWhenHashExists) {
 }
 
 TEST(Coinbase, ShouldThrowRuntimeErrorWhenHashComputationFails) {
-  GTEST_SKIP()
-      << "TODO: Mock 'ComputeHash' function to test the exception flow in "
-         "'getHash' method.";
+  GTEST_SKIP() << "TODO: Mock 'utils::core_lib::ComputeHash' function to test "
+                  "the exception flow in "
+                  "'getHash' method.";
 }
 
 TEST(Coinbase, ShouldMoveConstruct) {
@@ -143,9 +143,8 @@ TEST(Coinbase, ShouldMoveConstruct) {
   const auto sSourceUnixTimestamp{sSourceCoinbase.getUnixTimestamp()};
   const std::string sSourceHash{sSourceCoinbase.getHash()};
   transaction::Coinbase sMovedCoinbase{std::move(sSourceCoinbase)};
-  utils::ASSERT_MOVE_OPERATIONS(sSourceCoinbase, sMovedCoinbase,
-                                sSourceTimestamp, sSourceUnixTimestamp,
-                                sSourceHash);
+  lib::ASSERT_MOVE_OPERATIONS(sSourceCoinbase, sMovedCoinbase, sSourceTimestamp,
+                              sSourceUnixTimestamp, sSourceHash);
 }
 
 TEST(Coinbase, ShouldMoveAssign) {
@@ -155,9 +154,8 @@ TEST(Coinbase, ShouldMoveAssign) {
   const std::string sSourceHash{sSourceCoinbase.getHash()};
   transaction::Coinbase sMovedCoinbase{"Owner1", 1.3};
   sMovedCoinbase = std::move(sSourceCoinbase);
-  utils::ASSERT_MOVE_OPERATIONS(sSourceCoinbase, sMovedCoinbase,
-                                sSourceTimestamp, sSourceUnixTimestamp,
-                                sSourceHash);
+  lib::ASSERT_MOVE_OPERATIONS(sSourceCoinbase, sMovedCoinbase, sSourceTimestamp,
+                              sSourceUnixTimestamp, sSourceHash);
 }
 
 /* === Payload Tests === */
@@ -206,9 +204,9 @@ TEST_F(PayloadTest, ShouldReturnTheStoredHashWhenHashExists) {
 }
 
 TEST(Payload, ShouldThrowRuntimeErrorWhenHashComputationFails) {
-  GTEST_SKIP()
-      << "TODO: Mock 'ComputeHash' function to test the exception flow in "
-         "'getHash' method.";
+  GTEST_SKIP() << "TODO: Mock 'utils::core_lib::ComputeHash' function to test "
+                  "the exception flow in "
+                  "'getHash' method.";
 }
 
 TEST(Payload, ShouldMoveConstruct) {
@@ -217,8 +215,8 @@ TEST(Payload, ShouldMoveConstruct) {
   const auto sSourceUnixTimestamp{sSourcePayload.getUnixTimestamp()};
   const std::string sSourceHash{sSourcePayload.getHash()};
   transaction::Payload sMovedPayload{std::move(sSourcePayload)};
-  utils::ASSERT_MOVE_OPERATIONS(sSourcePayload, sMovedPayload, sSourceTimestamp,
-                                sSourceUnixTimestamp, sSourceHash);
+  lib::ASSERT_MOVE_OPERATIONS(sSourcePayload, sMovedPayload, sSourceTimestamp,
+                              sSourceUnixTimestamp, sSourceHash);
 }
 
 TEST(Payload, ShouldMoveAssign) {
@@ -228,8 +226,8 @@ TEST(Payload, ShouldMoveAssign) {
   const std::string sSourceHash{sSourcePayload.getHash()};
   transaction::Payload sMovedPayload{"Owner1", "Receiver1", 1.3};
   sMovedPayload = std::move(sSourcePayload);
-  utils::ASSERT_MOVE_OPERATIONS(sSourcePayload, sMovedPayload, sSourceTimestamp,
-                                sSourceUnixTimestamp, sSourceHash);
+  lib::ASSERT_MOVE_OPERATIONS(sSourcePayload, sMovedPayload, sSourceTimestamp,
+                              sSourceUnixTimestamp, sSourceHash);
 }
 
 /* === Coinbase and Payload Tests === */

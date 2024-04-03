@@ -3,8 +3,6 @@
 #pragma once
 
 #include <chrono>
-#include <cstdint>
-#include <string>
 
 namespace transaction {
 static std::string RemoveTrailingZeros(const std::string& iAmount);
@@ -22,9 +20,6 @@ std::uint64_t BitcoinToSatoshi(const double& iBitcoinAmount);
  * @return Bitcoin representation in std::string.
  */
 std::string BitcoinRepresentation(const double& iBitcoinAmount);
-
-std::pair<bool, std::optional<std::string>>
-ComputeHash(const std::string& iMessage);
 
 /**
  * @brief Indicate first transaction in the network.

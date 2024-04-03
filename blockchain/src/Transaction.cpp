@@ -1,21 +1,14 @@
 // author: georgiosmatzarapis
 
-#include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <string>
 
-#include "Hmac.hpp"
-#include "Logger.hpp"
-#include "OpenSslApi.hpp"
+#include "Common.hpp"
 #include "Transaction.hpp"
 
 namespace transaction {
 
-using namespace utils;
-
 static constexpr std::time_t kDefaultUnixTimestamp{946684800};
-static const Log& sLog{Log::GetInstance()};
 
 /* === Helpers === */
 
@@ -38,30 +31,6 @@ std::string BitcoinRepresentation(const double& iBitcoinAmount) {
   std::ostringstream sStream{};
   sStream << std::fixed << std::setprecision(8) << iBitcoinAmount;
   return RemoveTrailingZeros(sStream.str());
-}
-
-std::pair<bool, std::optional<std::string>>
-ComputeHash(const std::string& iMessage) {
-  auto sMessage{reinterpret_cast<const unsigned char*>(iMessage.c_str())};
-  unsigned char* sDigest{};
-  unsigned int sDigestSize{};
-  utils::HmacIt(sMessage, std::strlen(reinterpret_cast<const char*>(sMessage)),
-                &sDigest, &sDigestSize, std::make_unique<openssl::Api>());
-
-  if (sDigest) {
-    sLog.toFile(LogLevel::INFO,
-                "Transaction hash calculated for message '" + iMessage + "'.",
-                __PRETTY_FUNCTION__);
-    const std::string sResult(reinterpret_cast<char*>(sDigest), sDigestSize);
-    sDigest = nullptr;
-    return {true, std::make_optional<std::string>(sResult)};
-  } else {
-    sLog.toFile(LogLevel::ERROR,
-                "Transaction hash calculation failed for message '" + iMessage +
-                    "'.",
-                __PRETTY_FUNCTION__);
-    return {false, std::nullopt};
-  }
 }
 
 /* === Coinbase Class === */
@@ -137,7 +106,7 @@ std::string Coinbase::getHash() {
     const std::string aMessage{_owner + aSatoshiAmountCppStr +
                                aUnixTimestampCppStr};
     const std::pair<bool, std::optional<std::string>> aHash{
-        ComputeHash(aMessage)};
+        utils::core_lib::ComputeHash(aMessage)};
 
     if (aHash.first) {
       _hash = aHash.second.value();
@@ -194,7 +163,7 @@ std::string Payload::getHash() {
     const std::string aMessage{getOwner() + _receiver + aSatoshiAmountCppStr +
                                aUnixTimestampCppStr};
     std::pair<bool, std::optional<std::string>> aComputedHash{
-        ComputeHash(aMessage)};
+        utils::core_lib::ComputeHash(aMessage)};
 
     if (aComputedHash.first) {
       _hash = aComputedHash.second.value();
