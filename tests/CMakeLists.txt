@@ -9,6 +9,7 @@ set(Sources
  ${CMAKE_CURRENT_SOURCE_DIR}/TransactionTests.cpp
  ${CMAKE_CURRENT_SOURCE_DIR}/UserTests.cpp
  ${CMAKE_CURRENT_SOURCE_DIR}/UtilsTests.cpp
+ ${CMAKE_CURRENT_SOURCE_DIR}/CommonTests.cpp
 )
 
 find_package(GTest REQUIRED)

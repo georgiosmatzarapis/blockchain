@@ -46,6 +46,13 @@ class Block {
   std::optional<std::vector<std::unique_ptr<Coinbase>>> _coinbases{};
   std::vector<std::string> _transactionHashes{};
 
+  /**
+   * @brief Validate the hash of each incoming transaction and store it.
+   * @param ioTransactions Transaction type. Can be either Coinbase or Payload.
+   */
+  template <class Transaction>
+  void validateAndStoreTransactions(
+      std::vector<std::unique_ptr<Transaction>>&& ioTransactions);
   void groupTransactionHashes();
   /**
    * @brief Calculate the Merkle root hash in a simplified way using vector as

@@ -10,7 +10,8 @@
 
 namespace utils {
 namespace core_lib {
-std::pair<bool, std::optional<std::string>>
+
+std::expected<std::string, std::string>
 ComputeHash(const std::string& iMessage) {
   auto sMessage{reinterpret_cast<const unsigned char*>(iMessage.c_str())};
   unsigned char* sDigest{};
@@ -19,19 +20,38 @@ ComputeHash(const std::string& iMessage) {
                 &sDigest, &sDigestSize, std::make_unique<openssl::Api>());
 
   if (sDigest) {
-    Log::GetInstance().toFile(LogLevel::INFO,
-                              "Hash calculated for message '" + iMessage + "'.",
+    Log::GetInstance().toFile(LogLevel::DEBUG,
+                              "Hash calculated for message: " + iMessage,
                               __PRETTY_FUNCTION__);
     const std::string sResult(reinterpret_cast<char*>(sDigest), sDigestSize);
     sDigest = nullptr;
-    return {true, std::make_optional<std::string>(sResult)};
+    return sResult;
   } else {
-    Log::GetInstance().toFile(LogLevel::ERROR,
-                              "Hash calculation failed for message '" +
-                                  iMessage + "'.",
+    const std::string sErrorMessage{"Hash calculation failed for message: " +
+                                    iMessage};
+    Log::GetInstance().toFile(LogLevel::ERROR, sErrorMessage,
                               __PRETTY_FUNCTION__);
-    return {false, std::nullopt};
+    return std::unexpected{sErrorMessage};
   }
+}
+
+std::expected<bool, std::string> IsHashValid(const std::string& iMessage,
+                                             const std::string& iExpectedHash) {
+  const std::expected<std::string, std::string> sActualHash{
+      ComputeHash(iMessage)};
+  if (!sActualHash) {
+    return std::unexpected{sActualHash.error()};
+  }
+  return (sActualHash.value() == iExpectedHash) ? true : false;
+}
+
+// HashCalculationError
+
+HashCalculationError::HashCalculationError(const std::string& message)
+    : std::runtime_error{message} {}
+
+const char* HashCalculationError::what() const noexcept {
+  return std::runtime_error::what();
 }
 } // namespace core_lib
 } // namespace utils

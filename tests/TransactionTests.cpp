@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include "Common.hpp"
 #include "Transaction.hpp"
 
 namespace transaction {
@@ -63,32 +62,6 @@ class PayloadTest : public ::testing::Test {
 
   transaction::Payload _payload;
 };
-
-/* === utils::core_lib Tests === */
-
-TEST(ComputeHashTest, ShouldReturnTrueAndHashWhenMessageIsNoEmpty) {
-  std::pair<bool, std::optional<std::string>> sHash{
-      utils::core_lib::ComputeHash(std::string{"dummyText"})};
-  ASSERT_TRUE(sHash.first);
-  ASSERT_TRUE(sHash.second.has_value());
-}
-
-TEST(ComputeHashTest, ShouldReturnFalseAndNoHashWhenMessageIsEmpty) {
-  std::pair<bool, std::optional<std::string>> sHash{
-      utils::core_lib::ComputeHash(std::string{""})};
-  ASSERT_FALSE(sHash.first);
-  ASSERT_FALSE(sHash.second.has_value());
-}
-
-TEST(ComputeHashTest, ShouldReturnSameHashWhenMessageIsTheSame) {
-  ASSERT_EQ(utils::core_lib::ComputeHash(std::string{"dummyText"}),
-            utils::core_lib::ComputeHash(std::string{"dummyText"}));
-}
-
-TEST(ComputeHashTest, ShouldReturnDifferentHashWhenMessageIsNotTheSame) {
-  ASSERT_NE(utils::core_lib::ComputeHash(std::string{"dummyText1"}),
-            utils::core_lib::ComputeHash(std::string{"dummyText2"}));
-}
 
 /* === Coinbase Tests === */
 

@@ -1,7 +1,5 @@
 // author: georgiosmatzarapis
 
-#include <iostream>
-
 #include "Block.hpp"
 #include "Common.hpp"
 #include "Logger.hpp"
@@ -19,9 +17,11 @@ Block::Block(std::string previousHash, const std::uint32_t& index,
              std::optional<std::vector<std::unique_ptr<Coinbase>>> coinbases)
     : _previousHash{std::move(previousHash)},
       _index{index},
-      _payloads{std::move(payloads)},
-      _coinbases{std::move(coinbases)},
       _creationTime{std::chrono::system_clock::now()} {
+  if (coinbases.has_value()) {
+    validateAndStoreTransactions(std::move(coinbases.value()));
+  }
+  validateAndStoreTransactions(std::move(payloads));
   calculateMerkleRootHash();
 }
 
@@ -30,9 +30,11 @@ Block::Block(std::string previousHash, const std::uint32_t& index,
              std::optional<std::vector<std::unique_ptr<Payload>>> payloads)
     : _previousHash{std::move(previousHash)},
       _index{index},
-      _coinbases{std::move(coinbases)},
-      _payloads{std::move(payloads)},
       _creationTime{std::chrono::system_clock::now()} {
+  if (payloads.has_value()) {
+    validateAndStoreTransactions(std::move(payloads.value()));
+  }
+  validateAndStoreTransactions(std::move(coinbases));
   calculateMerkleRootHash();
 }
 
@@ -106,6 +108,69 @@ void Block::display() const {
 
 // Private API
 
+template <class Transaction>
+void Block::validateAndStoreTransactions(
+    std::vector<std::unique_ptr<Transaction>>&& ioTransactions) {
+  static_assert(std::is_same<Transaction, Coinbase>::value ||
+                    std::is_same<Transaction, Payload>::value,
+                "Transaction type must be either Coinbase or Payload");
+
+  bool aValidTransactionDetected{false};
+
+  std::for_each(
+      ioTransactions.begin(), ioTransactions.end(),
+      [this,
+       &aValidTransactionDetected](std::unique_ptr<Transaction>& aTransaction) {
+        std::string aTempMessageToHash{};
+        if constexpr (std::is_same<Transaction, Coinbase>::value) {
+          aTempMessageToHash =
+              aTransaction->getOwner() +
+              std::to_string(aTransaction->getSatoshiAmount()) +
+              std::to_string(aTransaction->getUnixTimestamp());
+        } else {
+          aTempMessageToHash =
+              aTransaction->getOwner() + aTransaction->getReceiver() +
+              std::to_string(aTransaction->getSatoshiAmount()) +
+              std::to_string(aTransaction->getUnixTimestamp());
+        }
+
+        const std::string aTempExpectedHash{aTransaction->getHash()};
+
+        const std::expected<bool, std::string> aIsHashValid{
+            core_lib::IsHashValid(aTempMessageToHash, aTempExpectedHash)};
+        if (aIsHashValid) {
+          if (aIsHashValid.value()) {
+            aValidTransactionDetected = true;
+            if constexpr (std::is_same<Transaction, Coinbase>::value) {
+              _coinbases.has_value()
+                  ? _coinbases.value().push_back(std::move(aTransaction))
+                  : _coinbases.emplace().push_back(std::move(aTransaction));
+            } else {
+              _payloads.has_value()
+                  ? _payloads.value().push_back(std::move(aTransaction))
+                  : _payloads.emplace().push_back(std::move(aTransaction));
+            }
+          } else {
+            sLog.toFile(LogLevel::WARNING,
+                        "Hash inconsistency detected for message '" +
+                            aTempMessageToHash +
+                            "', with expected hash: " + aTempExpectedHash,
+                        __PRETTY_FUNCTION__);
+          }
+        } else {
+          sLog.toFile(LogLevel::ERROR, aIsHashValid.error(),
+                      __PRETTY_FUNCTION__);
+          throw core_lib::HashCalculationError{aIsHashValid.error()};
+        }
+      });
+
+  if (!aValidTransactionDetected) {
+    sLog.toFile(LogLevel::WARNING,
+                "No valid transaction(s) found to store into the block.",
+                __PRETTY_FUNCTION__);
+  }
+}
+
 void Block::groupTransactionHashes() {
   if (_coinbases.has_value()) {
     std::for_each(_coinbases.value().begin(), _coinbases.value().end(),
@@ -130,16 +195,14 @@ void Block::calculateMerkleRootHash() {
     sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
     throw std::runtime_error{aErrorMessage};
   } else if (_transactionHashes.size() == 1) {
-    const std::pair<bool, std::optional<std::string>> aHash{
+    const std::expected<std::string, std::string> aHash{
         core_lib::ComputeHash(_transactionHashes[0])};
-    if (aHash.first) {
-      _merkleRootHash = aHash.second.value();
-      return;
-    } else {
-      const std::string aErrorMessage{"Merkle root hash calculation failed."};
-      sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
-      throw std::runtime_error{aErrorMessage};
+    if (!aHash) {
+      sLog.toFile(LogLevel::ERROR, aHash.error(), __PRETTY_FUNCTION__);
+      throw core_lib::HashCalculationError{aHash.error()};
     }
+    _merkleRootHash = aHash.value();
+    return;
   } else {
     std::vector<std::string> aMerkleTree{_transactionHashes};
 
@@ -153,19 +216,13 @@ void Block::calculateMerkleRootHash() {
           aPair += aMerkleTree[aMerkleTreeIndex + 1];
         }
 
-        const std::pair<bool, std::optional<std::string>> aNewHash{
+        const std::expected<std::string, std::string> aNewHash{
             core_lib::ComputeHash(aPair)};
-        std::string aNewHashValue{};
-        if (aNewHash.first) {
-          aNewHashValue = aNewHash.second.value();
-        } else {
-          const std::string aErrorMessage{
-              "Merkle root hash calculation failed."};
-          sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
-          throw std::runtime_error{aErrorMessage};
+        if (!aNewHash) {
+          sLog.toFile(LogLevel::ERROR, aNewHash.error(), __PRETTY_FUNCTION__);
+          throw core_lib::HashCalculationError{aNewHash.error()};
         }
-
-        aNewLevel.emplace_back(aNewHashValue);
+        aNewLevel.emplace_back(aNewHash.value());
       }
 
       aMerkleTree = aNewLevel;

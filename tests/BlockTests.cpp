@@ -61,8 +61,8 @@ TEST_F(BlockTest, ShouldReturnIndex) {
             std::get<std::uint32_t>(_testData["index"]));
 }
 
-TEST_F(BlockTest,
-       ShouldThrowWhenNoTransactionHashExistsToCalculateMerkleRootHash) {
+TEST(BlockMerkleRootHashTest,
+     ShouldThrowWhenNoTransactionHashExistsToCalculateMerkleRootHash) {
   std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
   sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
   auto sMovedCoinbases{std::move(sCoinbases)};
@@ -74,7 +74,7 @@ TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenOnlyOneTransactionHashExists) {
   const std::string sExpectedMerkleRootHash{
       utils::core_lib::ComputeHash(
           _payloadBlock.getPayloads().value()[0]->getHash())
-          .second.value()};
+          .value()};
   ASSERT_EQ(_payloadBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
 }
 
@@ -83,11 +83,12 @@ TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenTwoTransactionHashesExist) {
       utils::core_lib::ComputeHash(
           _fullBlock.getCoinbases().value()[0]->getHash() +
           _fullBlock.getPayloads().value()[0]->getHash())
-          .second.value()};
+          .value()};
   ASSERT_EQ(_fullBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
 }
 
-TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenThreeTransactionHashesExist) {
+TEST(BlockMerkleRootHashTest,
+     ShouldReturnMerkleRootHashWhenThreeTransactionHashesExist) {
   std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
   sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
   sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
@@ -99,15 +100,63 @@ TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenThreeTransactionHashesExist) {
   const std::string sHashedTwoFirstTransactionHashes{
       utils::core_lib::ComputeHash(sBlock.getCoinbases().value()[0]->getHash() +
                                    sBlock.getCoinbases().value()[1]->getHash())
-          .second.value()};
+          .value()};
   const std::string sHashedThirdTransactionHash{
       utils::core_lib::ComputeHash(sBlock.getPayloads().value()[0]->getHash())
-          .second.value()};
+          .value()};
   const std::string sExpectedMerkleRootHash{
       utils::core_lib::ComputeHash(sHashedTwoFirstTransactionHashes +
                                    sHashedThirdTransactionHash)
-          .second.value()};
+          .value()};
   ASSERT_EQ(sBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
+}
+
+TEST(BlockValidateAndStoreTransactionsTest, ShouldStoreAllValidTransactions) {
+  /* Prepare Block instance */
+  std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
+  std::vector<std::unique_ptr<Payload>> sPayloads{};
+  sCoinbases.push_back(
+      std::make_unique<Coinbase>(std::string{"dummyOwnerOne"}, 1));
+  sCoinbases.push_back(
+      std::make_unique<Coinbase>(std::string{"dummyOwnerTwo"}, 2));
+  sCoinbases.push_back(
+      std::make_unique<Coinbase>(std::string{"dummyOwnerThree"}, 3));
+  sPayloads.push_back(std::make_unique<Payload>(
+      std::string{"dummyOwnerOne"}, std::string{"dummyReceiverOne"}, 1));
+  sPayloads.push_back(std::make_unique<Payload>(
+      std::string{"dummyOwnerTwo"}, std::string{"dummyReceiverTwo"}, 2));
+  sPayloads.push_back(std::make_unique<Payload>(
+      std::string{"dummyOwnerThree"}, std::string{"dummyReceiverThree"}, 3));
+  const Block sBlock{std::string{"dummyPreviousHash"}, 0, std::move(sCoinbases),
+                     std::move(sPayloads)};
+
+  /* Retrieve data from sBlock */
+  const std::vector<std::unique_ptr<Coinbase>>& sBlockCoinbases{
+      sBlock.getCoinbases().value()};
+  EXPECT_TRUE(sBlockCoinbases.size() == 3);
+  const std::vector<std::unique_ptr<Payload>>& sBlockPayloads{
+      sBlock.getPayloads().value()};
+  EXPECT_TRUE(sBlockPayloads.size() == 3);
+
+  /* Validate Coinbases */
+  ASSERT_EQ(sBlockCoinbases[0]->getOwner(), std::string{"dummyOwnerOne"});
+  ASSERT_EQ(sBlockCoinbases[0]->getBitcoinAmount(), 1);
+  ASSERT_EQ(sBlockCoinbases[1]->getOwner(), std::string{"dummyOwnerTwo"});
+  ASSERT_EQ(sBlockCoinbases[1]->getBitcoinAmount(), 2);
+  ASSERT_EQ(sBlockCoinbases[2]->getOwner(), std::string{"dummyOwnerThree"});
+  ASSERT_EQ(sBlockCoinbases[2]->getBitcoinAmount(), 3);
+
+  /* Validate Payloads */
+  ASSERT_EQ(sBlockPayloads[0]->getOwner(), std::string{"dummyOwnerOne"});
+  ASSERT_EQ(sBlockPayloads[0]->getReceiver(), std::string{"dummyReceiverOne"});
+  ASSERT_EQ(sBlockPayloads[0]->getBitcoinAmount(), 1);
+  ASSERT_EQ(sBlockPayloads[1]->getOwner(), std::string{"dummyOwnerTwo"});
+  ASSERT_EQ(sBlockPayloads[1]->getReceiver(), std::string{"dummyReceiverTwo"});
+  ASSERT_EQ(sBlockPayloads[1]->getBitcoinAmount(), 2);
+  ASSERT_EQ(sBlockPayloads[2]->getOwner(), std::string{"dummyOwnerThree"});
+  ASSERT_EQ(sBlockPayloads[2]->getReceiver(),
+            std::string{"dummyReceiverThree"});
+  ASSERT_EQ(sBlockPayloads[2]->getBitcoinAmount(), 3);
 }
 
 TEST_F(BlockTest, ShouldReturnCoinbases) {
@@ -155,10 +204,12 @@ TEST_F(BlockTest, ShouldReturnPayloads) {
 
 TEST_F(BlockTest, ShouldReturnNullPayloadsWhenBlockContainsOnlyCoinbases) {
   ASSERT_FALSE(_coinbaseBlock.getPayloads().has_value());
+  ASSERT_TRUE(_coinbaseBlock.getCoinbases().has_value());
 }
 
 TEST_F(BlockTest, ShouldReturnNullCoinbasesWhenBlockContainsOnlyPayloads) {
   ASSERT_FALSE(_payloadBlock.getCoinbases().has_value());
+  ASSERT_TRUE(_payloadBlock.getPayloads().has_value());
 }
 
 TEST_F(BlockTest, ShouldReturnNotNullCoinbasesAndPayloadsWhenBlockHasAllData) {

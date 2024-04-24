@@ -105,16 +105,12 @@ std::string Coinbase::getHash() {
     const auto aUnixTimestampCppStr{std::to_string(_unixTimestamp)};
     const std::string aMessage{_owner + aSatoshiAmountCppStr +
                                aUnixTimestampCppStr};
-    const std::pair<bool, std::optional<std::string>> aHash{
+    const std::expected<std::string, std::string> aHash{
         utils::core_lib::ComputeHash(aMessage)};
-
-    if (aHash.first) {
-      _hash = aHash.second.value();
-    } else {
-      throw std::runtime_error{
-          "Error while computing the Coinbase hash for message '" + aMessage +
-          "'."};
+    if (!aHash) {
+      throw utils::core_lib::HashCalculationError{aHash.error()};
     }
+    _hash = aHash.value();
   }
   return _hash;
 }
@@ -162,16 +158,12 @@ std::string Payload::getHash() {
     const auto aUnixTimestampCppStr{std::to_string(getUnixTimestamp())};
     const std::string aMessage{getOwner() + _receiver + aSatoshiAmountCppStr +
                                aUnixTimestampCppStr};
-    std::pair<bool, std::optional<std::string>> aComputedHash{
+    const std::expected<std::string, std::string> aHash{
         utils::core_lib::ComputeHash(aMessage)};
-
-    if (aComputedHash.first) {
-      _hash = aComputedHash.second.value();
-    } else {
-      throw std::runtime_error{
-          "Error while computing the Payload hash for message '" + aMessage +
-          "'."};
+    if (!aHash) {
+      throw utils::core_lib::HashCalculationError{aHash.error()};
     }
+    _hash = aHash.value();
   }
   return _hash;
 }
