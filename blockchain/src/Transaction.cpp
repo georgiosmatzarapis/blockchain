@@ -40,9 +40,8 @@ Coinbase::Coinbase(std::string owner, const double& bitcoinAmount)
       _bitcoinAmount{bitcoinAmount},
       _satoshiAmount{BitcoinToSatoshi(_bitcoinAmount)},
       _bitcoinRepresentation{BitcoinRepresentation(_bitcoinAmount)},
-      _timestamp{std::chrono::system_clock::now()} {
-  calculateUnixTimestamp();
-}
+      _timestamp{std::chrono::system_clock::now()},
+      _unixTimestamp{utils::core_lib::GetUnixTimestamp(_timestamp)} {}
 
 Coinbase::Coinbase(const Coinbase& coinbase) = default;
 
@@ -108,20 +107,11 @@ std::string Coinbase::getHash() {
     const std::expected<std::string, std::string> aHash{
         utils::core_lib::ComputeHash(aMessage)};
     if (!aHash) {
-      throw utils::core_lib::HashCalculationError{aHash.error()};
+      throw utils::core_lib::exception::HashCalculationError{aHash.error()};
     }
     _hash = aHash.value();
   }
   return _hash;
-}
-
-// Private API
-
-void Coinbase::calculateUnixTimestamp() {
-  const auto aDurationSinceEpoch{_timestamp.time_since_epoch()};
-  const auto aSeconds{
-      std::chrono::duration_cast<std::chrono::seconds>(aDurationSinceEpoch)};
-  _unixTimestamp = aSeconds.count();
 }
 
 /* === Payload Class === */
@@ -161,7 +151,7 @@ std::string Payload::getHash() {
     const std::expected<std::string, std::string> aHash{
         utils::core_lib::ComputeHash(aMessage)};
     if (!aHash) {
-      throw utils::core_lib::HashCalculationError{aHash.error()};
+      throw utils::core_lib::exception::HashCalculationError{aHash.error()};
     }
     _hash = aHash.value();
   }

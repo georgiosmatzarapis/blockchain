@@ -8,6 +8,8 @@
 namespace block {
 namespace tests {
 
+using namespace utils;
+
 class BlockTest : public ::testing::Test {
  protected:
   BlockTest()
@@ -47,71 +49,7 @@ class BlockTest : public ::testing::Test {
   Block _fullBlock{};
 };
 
-TEST_F(BlockTest, ShouldReturnHash) {
-  ASSERT_EQ(_payloadBlock.getHash(), std::get<std::string>(_testData["hash"]));
-}
-
-TEST_F(BlockTest, ShouldReturnPreviousHash) {
-  ASSERT_EQ(_payloadBlock.getPreviousHash(),
-            std::get<std::string>(_testData["previousHash"]));
-}
-
-TEST_F(BlockTest, ShouldReturnIndex) {
-  ASSERT_EQ(_payloadBlock.getIndex(),
-            std::get<std::uint32_t>(_testData["index"]));
-}
-
-TEST(BlockMerkleRootHashTest,
-     ShouldThrowWhenNoTransactionHashExistsToCalculateMerkleRootHash) {
-  std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
-  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
-  auto sMovedCoinbases{std::move(sCoinbases)};
-  ASSERT_THROW(Block("dummyHash", 1, std::move(sCoinbases)),
-               std::runtime_error);
-}
-
-TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenOnlyOneTransactionHashExists) {
-  const std::string sExpectedMerkleRootHash{
-      utils::core_lib::ComputeHash(
-          _payloadBlock.getPayloads().value()[0]->getHash())
-          .value()};
-  ASSERT_EQ(_payloadBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
-}
-
-TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenTwoTransactionHashesExist) {
-  const std::string sExpectedMerkleRootHash{
-      utils::core_lib::ComputeHash(
-          _fullBlock.getCoinbases().value()[0]->getHash() +
-          _fullBlock.getPayloads().value()[0]->getHash())
-          .value()};
-  ASSERT_EQ(_fullBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
-}
-
-TEST(BlockMerkleRootHashTest,
-     ShouldReturnMerkleRootHashWhenThreeTransactionHashesExist) {
-  std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
-  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
-  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
-  std::vector<std::unique_ptr<Payload>> sPayloads{};
-  sPayloads.push_back(std::make_unique<Payload>("owner", "receiver", 1));
-  Block sBlock{"dummyHash", 1, std::move(sCoinbases), std::move(sPayloads)};
-
-  // Merkle root hash calculation
-  const std::string sHashedTwoFirstTransactionHashes{
-      utils::core_lib::ComputeHash(sBlock.getCoinbases().value()[0]->getHash() +
-                                   sBlock.getCoinbases().value()[1]->getHash())
-          .value()};
-  const std::string sHashedThirdTransactionHash{
-      utils::core_lib::ComputeHash(sBlock.getPayloads().value()[0]->getHash())
-          .value()};
-  const std::string sExpectedMerkleRootHash{
-      utils::core_lib::ComputeHash(sHashedTwoFirstTransactionHashes +
-                                   sHashedThirdTransactionHash)
-          .value()};
-  ASSERT_EQ(sBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
-}
-
-TEST(BlockValidateAndStoreTransactionsTest, ShouldStoreAllValidTransactions) {
+TEST(BlockInitializationTest, ShouldStoreAllValidTransactions) {
   /* Prepare Block instance */
   std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
   std::vector<std::unique_ptr<Payload>> sPayloads{};
@@ -157,6 +95,77 @@ TEST(BlockValidateAndStoreTransactionsTest, ShouldStoreAllValidTransactions) {
   ASSERT_EQ(sBlockPayloads[2]->getReceiver(),
             std::string{"dummyReceiverThree"});
   ASSERT_EQ(sBlockPayloads[2]->getBitcoinAmount(), 3);
+}
+
+TEST(BlockInitializationTest, ShouldThrowWhenNoValidTransactionHashFound) {
+  std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
+  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
+  auto sMovedCoinbases{std::move(sCoinbases)};
+  ASSERT_THROW(Block("dummyHash", 1, std::move(sCoinbases)),
+               core_lib::exception::TransactionConsistencyError);
+}
+
+TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenOnlyOneTransactionHashExists) {
+  const std::string sExpectedMerkleRootHash{
+      core_lib::ComputeHash(_payloadBlock.getPayloads().value()[0]->getHash())
+          .value()};
+  ASSERT_EQ(_payloadBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
+}
+
+TEST_F(BlockTest, ShouldReturnMerkleRootHashWhenTwoTransactionHashesExist) {
+  const std::string sExpectedMerkleRootHash{
+      core_lib::ComputeHash(_fullBlock.getCoinbases().value()[0]->getHash() +
+                            _fullBlock.getPayloads().value()[0]->getHash())
+          .value()};
+  ASSERT_EQ(_fullBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
+}
+
+TEST(BlockMerkleRootHashTest,
+     ShouldReturnMerkleRootHashWhenThreeTransactionHashesExist) {
+  std::vector<std::unique_ptr<Coinbase>> sCoinbases{};
+  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
+  sCoinbases.push_back(std::make_unique<Coinbase>("owner", 1));
+  std::vector<std::unique_ptr<Payload>> sPayloads{};
+  sPayloads.push_back(std::make_unique<Payload>("owner", "receiver", 1));
+  Block sBlock{"dummyHash", 1, std::move(sCoinbases), std::move(sPayloads)};
+
+  // Merkle root hash calculation
+  const std::string sHashedTwoFirstTransactionHashes{
+      core_lib::ComputeHash(sBlock.getCoinbases().value()[0]->getHash() +
+                            sBlock.getCoinbases().value()[1]->getHash())
+          .value()};
+  const std::string sHashedThirdTransactionHash{
+      core_lib::ComputeHash(sBlock.getPayloads().value()[0]->getHash())
+          .value()};
+  const std::string sExpectedMerkleRootHash{
+      core_lib::ComputeHash(sHashedTwoFirstTransactionHashes +
+                            sHashedThirdTransactionHash)
+          .value()};
+  ASSERT_EQ(sBlock.getMerkleRootHash(), sExpectedMerkleRootHash);
+}
+
+TEST_F(BlockTest, ShouldReturnExpectedHash) {
+  const std::string sBlockHeader{std::to_string(_fullBlock.getIndex()) +
+                                 _fullBlock.getPreviousHash() +
+                                 _fullBlock.getMerkleRootHash() +
+                                 std::to_string(_fullBlock.getCreationTime()) +
+                                 std::to_string(_fullBlock.getNonce())};
+  ASSERT_TRUE(
+      core_lib::IsHashValid(sBlockHeader, _fullBlock.getHash()).value());
+}
+
+TEST_F(BlockTest, ShouldReturnPreviousHash) {
+  ASSERT_EQ(_payloadBlock.getPreviousHash(),
+            std::get<std::string>(_testData["previousHash"]));
+}
+
+TEST_F(BlockTest, ShouldReturnIndex) {
+  ASSERT_EQ(_payloadBlock.getIndex(),
+            std::get<std::uint32_t>(_testData["index"]));
+}
+
+TEST_F(BlockTest, ShouldReturnNoEmptyNonce) {
+  EXPECT_GE(_payloadBlock.getNonce(), 0);
 }
 
 TEST_F(BlockTest, ShouldReturnCoinbases) {

@@ -17,12 +17,8 @@ Block::Block(std::string previousHash, const std::uint32_t& index,
              std::optional<std::vector<std::unique_ptr<Coinbase>>> coinbases)
     : _previousHash{std::move(previousHash)},
       _index{index},
-      _creationTime{std::chrono::system_clock::now()} {
-  if (coinbases.has_value()) {
-    validateAndStoreTransactions(std::move(coinbases.value()));
-  }
-  validateAndStoreTransactions(std::move(payloads));
-  calculateMerkleRootHash();
+      _creationTime{core_lib::GetUnixTimestamp()} {
+  initialize(std::move(coinbases), std::make_optional(std::move(payloads)));
 }
 
 Block::Block(std::string previousHash, const std::uint32_t& index,
@@ -30,12 +26,8 @@ Block::Block(std::string previousHash, const std::uint32_t& index,
              std::optional<std::vector<std::unique_ptr<Payload>>> payloads)
     : _previousHash{std::move(previousHash)},
       _index{index},
-      _creationTime{std::chrono::system_clock::now()} {
-  if (payloads.has_value()) {
-    validateAndStoreTransactions(std::move(payloads.value()));
-  }
-  validateAndStoreTransactions(std::move(coinbases));
-  calculateMerkleRootHash();
+      _creationTime{core_lib::GetUnixTimestamp()} {
+  initialize(std::make_optional(std::move(coinbases)), std::move(payloads));
 }
 
 // Public API
@@ -47,6 +39,10 @@ std::string Block::getPreviousHash() const { return _previousHash; }
 std::uint32_t Block::getIndex() const { return _index; }
 
 std::string Block::getMerkleRootHash() const { return _merkleRootHash; }
+
+std::uint32_t Block::getNonce() const { return _nonce; }
+
+std::time_t Block::getCreationTime() const { return _creationTime; }
 
 const std::optional<std::vector<std::unique_ptr<Payload>>>&
 Block::getPayloads() const {
@@ -103,10 +99,25 @@ void Block::display() const {
     std::cout << "No payloads found." << std::endl;
   }
 
-  std::cout << "\nEnd of transactions for block#" << _hash << ".\n";
+  std::cout << "\nEnd of transactions for block with hash: " << _hash
+            << std::endl;
 }
 
 // Private API
+
+void Block::initialize(
+    std::optional<std::vector<std::unique_ptr<Coinbase>>>&& ioCoinbases,
+    std::optional<std::vector<std::unique_ptr<Payload>>>&& ioPayloads) {
+  if (ioCoinbases.has_value()) {
+    validateAndStoreTransactions(std::move(ioCoinbases.value()));
+  }
+  if (ioPayloads.has_value()) {
+    validateAndStoreTransactions(std::move(ioPayloads.value()));
+  }
+  groupTransactionHashes();
+  calculateMerkleRootHash();
+  calculateBlockHash();
+}
 
 template <class Transaction>
 void Block::validateAndStoreTransactions(
@@ -115,12 +126,9 @@ void Block::validateAndStoreTransactions(
                     std::is_same<Transaction, Payload>::value,
                 "Transaction type must be either Coinbase or Payload");
 
-  bool aValidTransactionDetected{false};
-
   std::for_each(
       ioTransactions.begin(), ioTransactions.end(),
-      [this,
-       &aValidTransactionDetected](std::unique_ptr<Transaction>& aTransaction) {
+      [this](std::unique_ptr<Transaction>& aTransaction) {
         std::string aTempMessageToHash{};
         if constexpr (std::is_same<Transaction, Coinbase>::value) {
           aTempMessageToHash =
@@ -140,7 +148,6 @@ void Block::validateAndStoreTransactions(
             core_lib::IsHashValid(aTempMessageToHash, aTempExpectedHash)};
         if (aIsHashValid) {
           if (aIsHashValid.value()) {
-            aValidTransactionDetected = true;
             if constexpr (std::is_same<Transaction, Coinbase>::value) {
               _coinbases.has_value()
                   ? _coinbases.value().push_back(std::move(aTransaction))
@@ -160,76 +167,96 @@ void Block::validateAndStoreTransactions(
         } else {
           sLog.toFile(LogLevel::ERROR, aIsHashValid.error(),
                       __PRETTY_FUNCTION__);
-          throw core_lib::HashCalculationError{aIsHashValid.error()};
+          throw core_lib::exception::HashCalculationError{aIsHashValid.error()};
         }
       });
-
-  if (!aValidTransactionDetected) {
-    sLog.toFile(LogLevel::WARNING,
-                "No valid transaction(s) found to store into the block.",
-                __PRETTY_FUNCTION__);
-  }
 }
 
 void Block::groupTransactionHashes() {
+  bool aValidTransactionExist{false};
   if (_coinbases.has_value()) {
     std::for_each(_coinbases.value().begin(), _coinbases.value().end(),
                   [this](const std::unique_ptr<Coinbase>& iCoinbase) {
                     _transactionHashes.emplace_back(iCoinbase->getHash());
                   });
+    aValidTransactionExist = true;
   }
   if (_payloads.has_value()) {
     std::for_each(_payloads.value().begin(), _payloads.value().end(),
                   [this](const std::unique_ptr<Payload>& iPayload) {
                     _transactionHashes.emplace_back(iPayload->getHash());
                   });
+    aValidTransactionExist = true;
+  }
+  if (!aValidTransactionExist) {
+    const std::string aErrorMessage{"No valid transaction(s) found to store."};
+    sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
+    throw core_lib::exception::TransactionConsistencyError(aErrorMessage);
   }
 };
 
 void Block::calculateMerkleRootHash() {
-  groupTransactionHashes();
-
-  if (_transactionHashes.empty()) {
-    const std::string aErrorMessage{
-        "No transaction found to calculate the Merkle root hash."};
-    sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
-    throw std::runtime_error{aErrorMessage};
-  } else if (_transactionHashes.size() == 1) {
+  if (_transactionHashes.size() == 1) {
     const std::expected<std::string, std::string> aHash{
         core_lib::ComputeHash(_transactionHashes[0])};
     if (!aHash) {
       sLog.toFile(LogLevel::ERROR, aHash.error(), __PRETTY_FUNCTION__);
-      throw core_lib::HashCalculationError{aHash.error()};
+      throw core_lib::exception::HashCalculationError{aHash.error()};
     }
     _merkleRootHash = aHash.value();
     return;
-  } else {
-    std::vector<std::string> aMerkleTree{_transactionHashes};
+  }
 
-    while (aMerkleTree.size() > 1) {
-      std::vector<std::string> aNewLevel{};
+  std::vector<std::string> aMerkleTree{_transactionHashes};
+  while (aMerkleTree.size() > 1) {
+    std::vector<std::string> aNewLevel{};
 
-      for (std::size_t aMerkleTreeIndex{};
-           aMerkleTreeIndex < aMerkleTree.size(); aMerkleTreeIndex += 2) {
-        std::string aPair{aMerkleTree[aMerkleTreeIndex]};
-        if (aMerkleTreeIndex + 1 < aMerkleTree.size()) {
-          aPair += aMerkleTree[aMerkleTreeIndex + 1];
-        }
-
-        const std::expected<std::string, std::string> aNewHash{
-            core_lib::ComputeHash(aPair)};
-        if (!aNewHash) {
-          sLog.toFile(LogLevel::ERROR, aNewHash.error(), __PRETTY_FUNCTION__);
-          throw core_lib::HashCalculationError{aNewHash.error()};
-        }
-        aNewLevel.emplace_back(aNewHash.value());
+    for (std::size_t aMerkleTreeIndex{}; aMerkleTreeIndex < aMerkleTree.size();
+         aMerkleTreeIndex += 2) {
+      std::string aPair{aMerkleTree[aMerkleTreeIndex]};
+      if (aMerkleTreeIndex + 1 < aMerkleTree.size()) {
+        aPair += aMerkleTree[aMerkleTreeIndex + 1];
       }
 
-      aMerkleTree = aNewLevel;
+      const std::expected<std::string, std::string> aNewHash{
+          core_lib::ComputeHash(aPair)};
+      if (!aNewHash) {
+        sLog.toFile(LogLevel::ERROR, aNewHash.error(), __PRETTY_FUNCTION__);
+        throw core_lib::exception::HashCalculationError{aNewHash.error()};
+      }
+      aNewLevel.emplace_back(aNewHash.value());
     }
-    _merkleRootHash = aMerkleTree[0];
-    return;
+
+    aMerkleTree = aNewLevel;
   }
+  _merkleRootHash = aMerkleTree[0];
+  return;
 }
 
+void Block::calculateBlockHash() {
+  const std::string aHeader{std::to_string(_index) + _previousHash +
+                            _merkleRootHash + std::to_string(_creationTime)};
+  for (_nonce = 0; _nonce < 1000000; ++_nonce) {
+    const std::expected<std::string, std::string> aHash{
+        core_lib::ComputeHash(aHeader + std::to_string(_nonce))};
+    if (!aHash) {
+      sLog.toFile(LogLevel::ERROR, aHash.error(), __PRETTY_FUNCTION__);
+      throw core_lib::exception::HashCalculationError(aHash.error());
+    }
+#ifndef NDEBUG
+    _hash = aHash.value();
+    return;
+#else
+    if (aHash.value().substr(0, 2) == kTargetDifficulty) {
+      _hash = aHash.value();
+      return;
+    }
+#endif
+  }
+  const std::string aErrorMessage{
+      "Block hash calculation failed for target difficulty: " +
+      kTargetDifficulty};
+  sLog.toFile(LogLevel::ERROR, aErrorMessage, __PRETTY_FUNCTION__);
+  throw core_lib::exception::BlockHashCalculationFailure{aErrorMessage};
+}
 } // namespace block

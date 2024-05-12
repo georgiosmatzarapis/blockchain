@@ -61,6 +61,26 @@ TEST(IsHashValidTest, ShouldReturnErrorWhenHashComputationFails) {
             std::string{"Hash calculation failed for message: "});
 }
 
+// GetUnixTimestamp
+
+TEST(GetUnixTimestampTest, ShouldReturnCurrentTimeWhenCallWithNoArg) {
+  const std::time_t sExpectedUnixTimestamp{GetUnixTimestamp()};
+  const std::time_t sActualUnixTimestamp{
+      std::chrono::duration_cast<std::chrono::seconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+          .count()};
+  ASSERT_GE(sExpectedUnixTimestamp - sActualUnixTimestamp, 0);
+  ASSERT_LE(sExpectedUnixTimestamp - sActualUnixTimestamp, 2);
+}
+
+TEST(GetUnixTimestampTest, ShouldReturnCorrespondingTimeWhenCallWithArg) {
+  const std::time_t sPastUnixTimestamp{GetUnixTimestamp(
+      std::chrono::system_clock::now() - std::chrono::minutes(300))};
+  const std::time_t sCurrentUnixTimestamp{GetUnixTimestamp()};
+  ASSERT_GE(sCurrentUnixTimestamp - sPastUnixTimestamp, 18000);
+  ASSERT_LE(sCurrentUnixTimestamp - sPastUnixTimestamp, 18002);
+}
+
 } // namespace tests
 } // namespace core_lib
 } // namespace utils

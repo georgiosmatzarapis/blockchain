@@ -52,8 +52,6 @@ class Coinbase {
   std::time_t _unixTimestamp{};
   std::uint64_t _satoshiAmount{};
   std::string _bitcoinRepresentation{};
-
-  void calculateUnixTimestamp();
 };
 
 class Payload final : public Coinbase {

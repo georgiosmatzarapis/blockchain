@@ -28,6 +28,8 @@ class Block {
   [[nodiscard]] std::string getPreviousHash() const;
   [[nodiscard]] std::uint32_t getIndex() const;
   [[nodiscard]] std::string getMerkleRootHash() const;
+  [[nodiscard]] std::uint32_t getNonce() const;
+  [[nodiscard]] std::time_t getCreationTime() const;
   [[nodiscard]] const std::optional<std::vector<std::unique_ptr<Coinbase>>>&
   getCoinbases() const;
   [[nodiscard]] const std::optional<std::vector<std::unique_ptr<Payload>>>&
@@ -38,26 +40,42 @@ class Block {
  private:
   std::uint32_t _index{};
   std::string _merkleRootHash{};
-  std::chrono::system_clock::time_point _creationTime{};
-  std::uint64_t _nonce{};
+  std::time_t _creationTime{};
+  std::uint32_t _nonce{};
   std::string _previousHash{};
   std::string _hash{};
   std::optional<std::vector<std::unique_ptr<Payload>>> _payloads{};
   std::optional<std::vector<std::unique_ptr<Coinbase>>> _coinbases{};
   std::vector<std::string> _transactionHashes{};
 
+  static constexpr std::string kTargetDifficulty{"00"};
+
+  void initialize(
+      std::optional<std::vector<std::unique_ptr<Coinbase>>>&& ioCoinbases,
+      std::optional<std::vector<std::unique_ptr<Payload>>>&& ioPayloads);
   /**
    * @brief Validate the hash of each incoming transaction and store it.
    * @param ioTransactions Transaction type. Can be either Coinbase or Payload.
+   * @throw HashCalculationError.
    */
   template <class Transaction>
   void validateAndStoreTransactions(
       std::vector<std::unique_ptr<Transaction>>&& ioTransactions);
+  /**
+   * @brief Group into a single vector the valid transaction hashes.
+   * @throw TransactionConsistencyError.
+   */
   void groupTransactionHashes();
   /**
    * @brief Calculate the Merkle root hash in a simplified way using vector as
    * main data structure.
+   * @throw HashCalculationError.
    */
   void calculateMerkleRootHash();
+  /**
+   * @brief Calculate the Block's hash.
+   * @throw HashCalculationError, BlockHashCalculationFailure.
+   */
+  void calculateBlockHash();
 };
 } // namespace block
