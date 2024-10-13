@@ -1,0 +1,38 @@
+{
+ "version": 7,
+ "configurePresets": [
+  {
+   "name": "debug-ninja",
+   "displayName": "default",
+   "generator": "Ninja",
+   "binaryDir": "${sourceDir}/build/debug",
+   "cacheVariables": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+   }
+  }
+ ],
+ "buildPresets": [
+  {
+   "name": "blockchain-ninja-debug",
+   "verbose": false,
+   "configurePreset": "debug-ninja"
+  }
+ ],
+ "workflowPresets": [
+  {
+   "name": "blockchain-wf",
+   "description": "Configure and build",
+   "steps": [
+    {
+     "type": "configure",
+     "name": "debug-ninja"
+    },
+    {
+     "type": "build",
+     "name": "blockchain-ninja-debug"
+    }
+   ]
+  }
+ ]
+}

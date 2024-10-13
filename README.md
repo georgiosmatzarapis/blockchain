@@ -22,6 +22,20 @@ Editor: I have chosen Visual Studio Code (version: 1.87.2) for the development o
 
 Also, to highlight that CMake has been chosen for the build orchestration using the ninja build tool.
 
+## Configuration, Build, and Run
+
+You can configure the project and build it using the following command:
+
+```console
+cmake --workflow --preset blockchain-wf
+```
+
+To run the application, execute the binary:
+
+```console
+./build/debug/app/Blockchain_app
+```
+
 ## Acknowledgments
 
 Special thanks to the creators and maintainers of the following projects and libraries:
@@ -33,6 +47,6 @@ Special thanks to the creators and maintainers of the following projects and lib
 
 ---
 
-### Author
+## Author
 
 @[georgiosmatzarapis](https://georgiosmatzarapis.com)

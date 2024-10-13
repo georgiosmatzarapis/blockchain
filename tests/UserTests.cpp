@@ -1,5 +1,7 @@
 // author: georgiosmatzarapis
 
+#include <variant>
+
 #include <gtest/gtest.h>
 
 #include "User.hpp"
